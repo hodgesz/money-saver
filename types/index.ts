@@ -8,14 +8,16 @@ export interface Transaction {
   category_id: string
   description: string
   merchant?: string
-  receipt_url?: string
+  account_id?: string | null
+  receipt_url?: string | null
+  is_income: boolean
   created_at: string
   updated_at: string
 }
 
 export interface Category {
   id: string
-  user_id: string
+  user_id: string | null
   name: string
   color?: string
   icon?: string
