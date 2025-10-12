@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1173d4",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          },
+        },
+      };
+    </script>
+<style>
+      .chart-bar {
+        background-color: #e5e7eb;
+      }
+      .dark .chart-bar {
+        background-color: #374151;
+      }
+      .chart-bar-fill-1 {
+        background-color: #1173d4;
+      }
+      .dark .chart-bar-fill-1 {
+        background-color: #1173d4;
+      }
+      .chart-bar-fill-2 {
+        background-color: #3b82f6;
+      }
+      .dark .chart-bar-fill-2 {
+        background-color: #3b82f6;
+      }
+      .chart-bar-fill-3 {
+        background-color: #60a5fa;
+      }
+      .dark .chart-bar-fill-3 {
+        background-color: #60a5fa;
+      }
+      .chart-bar-fill-4 {
+        background-color: #93c5fd;
+      }
+      .dark .chart-bar-fill-4 {
+        background-color: #93c5fd;
+      }
+      .chart-bar-fill-5 {
+        background-color: #bfdbfe;
+      }
+      .dark .chart-bar-fill-5 {
+        background-color: #bfdbfe;
+      }
+    </style>
+</head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<div class="flex h-full grow">
+<div class="flex flex-col w-64 bg-background-light dark:bg-background-dark border-r border-gray-200 dark:border-gray-700">
+<div class="flex flex-col flex-1 p-4">
+<div class="flex items-center gap-3 mb-8">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDaO9aDRIGtHQvjA7Y8FZqegbIBcVlvn98n0qnuGOrP_RWV0qk9MU2jE3Uc3DGbE4Gy3Qb56XjuzTwwau6xrrFUxbYZDFDfNn3U2BspvULJEWlrSSowwU1mrXscw437e7wAnewVrLPi0OqLb-BqXKIxH1o_BWkbOX1Pqfzc4kZ7lpOyTmmCiOEAedah5fQpA9twKe1XJFrg-G3f7uElUWc5fwJlvC5GZ7mCoMKhtedNocdlPWtsaWoZdbQJ08HcVaMeZiBd8tFeB34");'></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-medium">Sophia</h1>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Account</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+</svg>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"></path>
+</svg>
+<span class="text-sm font-medium">Transactions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M152,120H136V56h8a32,32,0,0,1,32,32,8,8,0,0,0,16,0,48.05,48.05,0,0,0-48-48h-8V24a8,8,0,0,0-16,0V40h-8a48,48,0,0,0,0,96h8v64H104a32,32,0,0,1-32-32,8,8,0,0,0-16,0,48.05,48.05,0,0,0,48,48h16v16a8,8,0,0,0,16,0V216h16a48,48,0,0,0,0-96Zm-40,0a32,32,0,0,1,0-64h8v64Zm40,80H136V136h16a32,32,0,0,1,0,64Z"></path>
+</svg>
+<span class="text-sm font-medium">Budgets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,136H40V56H216V176ZM104,120v24a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32-16v40a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32-16v56a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"></path>
+</svg>
+<span class="text-sm font-medium">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"></path>
+</svg>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+<main class="flex-1 overflow-y-auto">
+<div class="px-6 py-8">
+<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+<div class="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg p-6">
+<p class="text-base font-medium text-gray-800 dark:text-gray-200">Current Month Spending</p>
+<p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">$1,250</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+<div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+<h2 class="text-lg font-medium text-gray-900 dark:text-white">Spending by Category</h2>
+<div class="mt-4 flex items-end justify-center gap-6 h-48">
+<div class="flex flex-col items-center w-full">
+<div class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-t-lg"><div class="rounded-t-lg bg-primary" style="height: 60%;"></div></div>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mt-2">Food</p>
+</div>
+<div class="flex flex-col items-center w-full">
+<div class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-t-lg"><div class="rounded-t-lg bg-primary" style="height: 50%;"></div></div>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mt-2">Transport</p>
+</div>
+<div class="flex flex-col items-center w-full">
+<div class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-t-lg"><div class="rounded-t-lg bg-primary" style="height: 10%;"></div></div>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mt-2">Fun</p>
+</div>
+<div class="flex flex-col items-center w-full">
+<div class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-t-lg"><div class="rounded-t-lg bg-primary" style="height: 40%;"></div></div>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mt-2">Utilities</p>
+</div>
+<div class="flex flex-col items-center w-full">
+<div class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-t-lg"><div class="rounded-t-lg bg-primary" style="height: 70%;"></div></div>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mt-2">Rent</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+<h2 class="text-lg font-medium text-gray-900 dark:text-white">Spending Trends</h2>
+<div class="mt-4 h-48">
+<svg fill="none" height="100%" preserveAspectRatio="none" viewBox="0 0 472 150" width="100%" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H0V109Z" fill="url(#paint0_linear)"></path>
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25" stroke="var(--color-primary)" stroke-linecap="round" stroke-width="3"></path>
+<defs>
+<linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear" x1="236" x2="236" y1="1" y2="149">
+<stop stop-color="var(--color-primary)" stop-opacity="0.2"></stop>
+<stop offset="1" stop-color="var(--color-primary)" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+</svg>
+</div>
+<div class="flex justify-around mt-2">
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Jan</p>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Feb</p>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Mar</p>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Apr</p>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">May</p>
+<p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Jun</p>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Budget Status</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+<div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<p class="text-base font-medium text-gray-800 dark:text-gray-200">Food Budget</p>
+<p class="text-sm font-medium text-gray-600 dark:text-gray-400">75%</p>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 75%;"></div>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">$750 / $1000</p>
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<p class="text-base font-medium text-gray-800 dark:text-gray-200">Transportation Budget</p>
+<p class="text-sm font-medium text-gray-600 dark:text-gray-400">50%</p>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 50%;"></div>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">$250 / $500</p>
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<p class="text-base font-medium text-gray-800 dark:text-gray-200">Entertainment Budget</p>
+<p class="text-sm font-medium text-gray-600 dark:text-gray-400">90%</p>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 90%;"></div>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">$450 / $500</p>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
+<div class="overflow-x-auto mt-4">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+<table class="min-w-full">
+<thead class="bg-gray-50 dark:bg-gray-700">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2023-07-15</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Grocery Store</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 dark:bg-primary/20 text-primary">Food</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-$75</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2023-07-14</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Gas Station</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 dark:bg-primary/20 text-primary">Transportation</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-$40</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2023-07-13</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Movie Theater</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 dark:bg-primary/20 text-primary">Entertainment</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-$25</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2023-07-12</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Electricity Bill</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 dark:bg-primary/20 text-primary">Utilities</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-$100</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2023-07-11</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Rent Payment</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 dark:bg-primary/20 text-primary">Rent</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-$1000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html>
