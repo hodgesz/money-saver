@@ -149,15 +149,47 @@ npm run build
 # Start production server
 npm start
 
-# Run tests
+# Run tests (single run)
 npm test
 
-# Run tests with coverage
+# Run tests in watch mode (recommended for development)
+npm run test:watch
+
+# Run tests with coverage report
 npm run test:coverage
 
 # Lint code
 npm run lint
 ```
+
+### Test-Driven Development (TDD) Workflow
+
+This project follows TDD practices. When developing new features:
+
+1. **Write the test first** - Define expected behavior before implementation
+2. **Run test and watch it fail** - Confirm test is working (Red)
+3. **Write minimal code to pass** - Make the test pass (Green)
+4. **Refactor and improve** - Clean up code while tests protect you (Refactor)
+5. **Repeat** - Continue the cycle for next feature
+
+**Example TDD session:**
+```bash
+# Start test watch mode in one terminal
+npm run test:watch
+
+# In another terminal, start dev server
+npm run dev
+
+# Write test → See it fail → Implement → See it pass → Refactor
+```
+
+**Quick Testing Guide:**
+- Place tests in `__tests__/` directories next to source code
+- Name test files: `ComponentName.test.tsx` or `utilityName.test.ts`
+- Run specific tests: `npm test -- Button.test.tsx`
+- Check coverage: `npm run test:coverage` then open `coverage/lcov-report/index.html`
+
+For comprehensive testing documentation, see [TESTING.md](docs/TESTING.md).
 
 ### Database Migrations
 
@@ -219,10 +251,26 @@ supabase db reset
 
 ## Testing Strategy
 
-- **Unit Tests**: Jest for component and utility testing
-- **Integration Tests**: Testing Library for user flow testing
-- **E2E Tests**: Playwright or Cypress for critical paths
-- **Manual Testing**: User acceptance testing with real transaction files
+This project follows **Test-Driven Development (TDD)** practices to ensure code quality, maintainability, and confidence in deployments.
+
+### Testing Stack
+- **Jest**: Test runner and assertion library
+- **React Testing Library**: Component testing with user-centric queries
+- **@testing-library/user-event**: Realistic user interaction simulation
+- **@testing-library/jest-dom**: Enhanced DOM matchers
+
+### Test Types
+- **Unit Tests**: Test individual functions, utilities, and business logic (Target: 90%+ coverage)
+- **Component Tests**: Test React components in isolation (Target: 75%+ coverage)
+- **Integration Tests**: Test feature flows and component interactions (Target: 70%+ coverage)
+- **E2E Tests**: Playwright for critical user journeys (Future phase)
+
+### Coverage Requirements
+- **Minimum**: 70% coverage for statements, branches, functions, and lines
+- **High-Priority**: Business logic and utilities should have 85%+ coverage
+- Tests must pass before merging to main branch
+
+For detailed testing guidelines, TDD workflow, and examples, see **[TESTING.md](docs/TESTING.md)**.
 
 ## Performance Goals
 
@@ -246,6 +294,7 @@ This project is under active development. For details on the development process
 ## Documentation
 
 - [Product Requirements Document](docs/PRD.md) - Detailed feature specifications and requirements
+- [Testing Guide](docs/TESTING.md) - TDD practices, testing stack, and examples
 - [CLAUDE.md](CLAUDE.md) - Development guidelines and project context
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Documentation](https://nextjs.org/docs)

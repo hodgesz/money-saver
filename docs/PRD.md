@@ -1,6 +1,6 @@
 # Product Requirements Document: Money Saver
 
-**Version**: 1.0
+**Version**: 1.1
 **Last Updated**: 2025-10-12
 **Status**: Draft
 
@@ -52,6 +52,8 @@ To create an intuitive, powerful financial tracking platform that transforms raw
 ---
 
 ## Feature Requirements
+
+**Testing Requirement**: All features must be developed using Test-Driven Development (TDD). Each feature must include unit tests, component tests, and integration tests as defined in the Definition of Done (see Testing Strategy section).
 
 ### Phase 1: Core Features (MVP)
 
@@ -323,10 +325,77 @@ Alerts
 5. Test with sample transaction data
 
 ### Testing Strategy
-- **Unit Tests**: Jest for component and utility testing
-- **Integration Tests**: Testing Library for user flow testing
-- **E2E Tests**: Playwright or Cypress for critical paths
-- **Manual Testing**: User acceptance testing with real transaction files
+
+This project follows **Test-Driven Development (TDD)** methodology to ensure high code quality and maintainability.
+
+#### Testing Stack
+- **Jest**: Test runner and assertion framework
+- **React Testing Library**: Component testing with accessible queries
+- **@testing-library/user-event**: Realistic user interaction simulation
+- **@testing-library/jest-dom**: Enhanced DOM matchers
+- **Playwright** (Future): End-to-end testing for critical user flows
+
+#### Test Coverage Requirements
+
+**Minimum Coverage Thresholds** (Enforced in CI/CD):
+- Statements: 70%
+- Branches: 70%
+- Functions: 70%
+- Lines: 70%
+
+**Coverage by Component Type**:
+- **Utilities & Business Logic**: 90%+ coverage (High Priority)
+- **React Components**: 75%+ coverage (Medium Priority)
+- **Page Components**: 60%+ coverage (Medium Priority)
+- **Configuration Files**: Coverage not required (Low Priority)
+
+#### Test Types & Scope
+
+1. **Unit Tests**
+   - Test individual functions in isolation
+   - Focus on utilities, helpers, and business logic
+   - Fast execution (< 100ms per test)
+   - No external dependencies
+
+2. **Component Tests**
+   - Test React components with user-centric queries
+   - Simulate user interactions with userEvent
+   - Mock external dependencies (API calls, context)
+   - Test both happy paths and error states
+
+3. **Integration Tests**
+   - Test feature flows across multiple components
+   - Verify data flow between components
+   - Test form submissions with validation
+   - Mock Supabase and external services
+
+4. **End-to-End Tests** (Phase 2+)
+   - Test critical user journeys in real browser
+   - Focus on high-value flows:
+     - User registration and authentication
+     - Transaction import and categorization
+     - Budget creation and monitoring
+   - Run against staging environment before production
+
+#### Quality Gates
+
+**Pre-Merge Requirements**:
+- All tests must pass
+- Code coverage meets minimum thresholds (70%)
+- No console errors or warnings
+- Linting passes without errors
+
+**Definition of Done (DoD)** - A feature is complete when:
+1. ✅ Tests written before implementation (TDD)
+2. ✅ Unit tests written for all business logic
+3. ✅ Component tests written for UI components
+4. ✅ Integration tests written for user flows
+5. ✅ All tests pass locally and in CI
+6. ✅ Code coverage meets or exceeds requirements
+7. ✅ Code reviewed and approved
+8. ✅ Documentation updated (if needed)
+
+For detailed testing guidelines, TDD workflow, and code examples, see **[TESTING.md](../TESTING.md)**.
 
 ### Deployment
 - **Phase 1**: Local development environment
@@ -377,15 +446,21 @@ Alerts
 ## Appendix
 
 ### References
+- [Testing Guide](TESTING.md) - Comprehensive TDD practices and testing guidelines
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev)
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
 
 ### Glossary
+- **TDD**: Test-Driven Development - Development methodology where tests are written before implementation code
 - **RLS**: Row Level Security - Database security feature that restricts access to rows
 - **MVP**: Minimum Viable Product - Initial version with core features
 - **OCR**: Optical Character Recognition - Technology to extract text from images
 - **MCP**: Model Context Protocol - Protocol for AI model interactions
+- **DoD**: Definition of Done - Checklist of criteria that must be met for a feature to be considered complete
+- **CI/CD**: Continuous Integration/Continuous Deployment - Automated testing and deployment pipeline
 
 ---
 
@@ -394,3 +469,4 @@ Alerts
 | Version | Date       | Author | Changes                           |
 |---------|------------|--------|-----------------------------------|
 | 1.0     | 2025-10-12 | Claude | Initial PRD creation              |
+| 1.1     | 2025-10-12 | Claude | Added comprehensive TDD requirements, quality gates, and Definition of Done |

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1173d4",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="font-display">
+<div class="flex min-h-screen w-full bg-background-light dark:bg-background-dark">
+<aside class="flex w-64 flex-col border-r border-background-light/10 dark:border-background-dark/10 p-4">
+<div class="flex items-center gap-3 p-2">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCvH2raTGcOdhLt7BqXkLMYbCOKWljf56Iw6MJgGfetETPhBvWTTN12I5uwFLK7Oi0MO2sCTySH7tuPzU3oQPXhi19x4N6z_Y73ZmQJIHRfnW6c-XCGtM572dwkHneXe8eBVXv25zShGHpwzD898pcj5dRKMcRKL4Efpht0p_fWk72AIGu_o6NpYCoseP3eTeLwbDR4g8Um8iJAhAo0eXVNUxVFPW69CVq0lFzq59uzaUlc49lwts9hiMDVPApEoMA11r39wNnSYH4")'></div>
+<div>
+<h1 class="font-bold text-[#111418] dark:text-white">Sophia</h1>
+<p class="text-sm text-[#617589] dark:text-gray-400">Account</p>
+</div>
+</div>
+<nav class="mt-8 flex flex-col gap-2">
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-[#617589] dark:text-gray-400 hover:bg-primary/10 hover:text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"></path>
+</svg>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-[#617589] dark:text-gray-400 hover:bg-primary/10 hover:text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"></path>
+</svg>
+<span class="font-medium">Transactions</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 bg-primary/10 text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M116,80h4v40h-4a20,20,0,0,1,0-40Zm32,56H136v40h12a20,20,0,0,0,0-40Zm84-8A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-48,28a36,36,0,0,0-36-36H136V80h4a20,20,0,0,1,20,20,8,8,0,0,0,16,0,36,36,0,0,0-36-36h-4V56a8,8,0,0,0-16,0v8h-4a36,36,0,0,0,0,72h4v40h-8a20,20,0,0,1-20-20,8,8,0,0,0-16,0,36,36,0,0,0,36,36h8v8a8,8,0,0,0,16,0v-8h12A36,36,0,0,0,184,156Z"></path>
+</svg>
+<span class="font-medium">Budgets</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-[#617589] dark:text-gray-400 hover:bg-primary/10 hover:text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,136H40V56H216V176ZM104,120v24a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32-16v40a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32-16v56a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"></path>
+</svg>
+<span class="font-medium">Reports</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-[#617589] dark:text-gray-400 hover:bg-primary/10 hover:text-primary" href="#">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"></path>
+</svg>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+</aside>
+<main class="flex-1 overflow-y-auto p-8">
+<div class="max-w-4xl mx-auto">
+<header class="mb-8">
+<h1 class="text-4xl font-bold text-[#111418] dark:text-white">Budgets</h1>
+<p class="text-lg text-[#617589] dark:text-gray-400 mt-2">Manage your spending categories and set monthly budget limits.</p>
+</header>
+<section class="mb-8">
+<h2 class="text-2xl font-bold text-[#111418] dark:text-white mb-4">Spending Categories</h2>
+<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-background-dark/50">
+<table class="w-full text-left">
+<thead class="bg-background-light dark:bg-background-dark/20 text-sm font-semibold text-[#111418] dark:text-white">
+<tr>
+<th class="p-4">Category</th>
+<th class="p-4">Budget</th>
+<th class="p-4">Spent</th>
+<th class="p-4">Remaining</th>
+<th class="p-4">Actions</th>
+</tr>
+</thead>
+<tbody class="text-sm text-[#111418] dark:text-white">
+<tr class="border-t border-gray-200 dark:border-gray-700">
+<td class="p-4 font-medium">Groceries</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$500</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$350</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-2 rounded-full bg-background-light/80 dark:bg-background-dark/80 overflow-hidden">
+<div class="h-full bg-primary" style="width: 70%;"></div>
+</div>
+<span class="font-medium">70%</span>
+</div>
+</td>
+<td class="p-4"><button class="font-semibold text-primary">Edit</button></td>
+</tr>
+<tr class="border-t border-gray-200 dark:border-gray-700">
+<td class="p-4 font-medium">Dining Out</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$300</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$200</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-2 rounded-full bg-background-light/80 dark:bg-background-dark/80 overflow-hidden">
+<div class="h-full bg-primary" style="width: 67%;"></div>
+</div>
+<span class="font-medium">67%</span>
+</div>
+</td>
+<td class="p-4"><button class="font-semibold text-primary">Edit</button></td>
+</tr>
+<tr class="border-t border-gray-200 dark:border-gray-700">
+<td class="p-4 font-medium">Entertainment</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$200</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$150</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-2 rounded-full bg-background-light/80 dark:bg-background-dark/80 overflow-hidden">
+<div class="h-full bg-primary" style="width: 75%;"></div>
+</div>
+<span class="font-medium">75%</span>
+</div>
+</td>
+<td class="p-4"><button class="font-semibold text-primary">Edit</button></td>
+</tr>
+<tr class="border-t border-gray-200 dark:border-gray-700">
+<td class="p-4 font-medium">Transportation</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$150</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$100</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-2 rounded-full bg-background-light/80 dark:bg-background-dark/80 overflow-hidden">
+<div class="h-full bg-primary" style="width: 67%;"></div>
+</div>
+<span class="font-medium">67%</span>
+</div>
+</td>
+<td class="p-4"><button class="font-semibold text-primary">Edit</button></td>
+</tr>
+<tr class="border-t border-gray-200 dark:border-gray-700">
+<td class="p-4 font-medium">Shopping</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$400</td>
+<td class="p-4 text-[#617589] dark:text-gray-400">$250</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-2 rounded-full bg-background-light/80 dark:bg-background-dark/80 overflow-hidden">
+<div class="h-full bg-primary" style="width: 63%;"></div>
+</div>
+<span class="font-medium">63%</span>
+</div>
+</td>
+<td class="p-4"><button class="font-semibold text-primary">Edit</button></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-4">
+<button class="rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm">
+                Add Category
+              </button>
+</div>
+</section>
+<section>
+<h2 class="text-2xl font-bold text-[#111418] dark:text-white mb-4">Budget Overview</h2>
+<div class="p-1 rounded-lg bg-background-light/80 dark:bg-background-dark/20 flex max-w-sm mb-6">
+<label class="flex-1">
+<input class="sr-only" name="period" type="radio" value="weekly"/>
+<span class="w-full block text-center cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-[#617589] dark:text-gray-400 transition-colors">Weekly</span>
+</label>
+<label class="flex-1">
+<input checked="" class="sr-only" name="period" type="radio" value="monthly"/>
+<span class="w-full block text-center cursor-pointer rounded-lg px-4 py-2 text-sm font-medium bg-white dark:bg-background-dark/80 text-primary shadow-sm transition-colors">Monthly</span>
+</label>
+<label class="flex-1">
+<input class="sr-only" name="period" type="radio" value="quarterly"/>
+<span class="w-full block text-center cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-[#617589] dark:text-gray-400 transition-colors">Quarterly</span>
+</label>
+</div>
+<div class="bg-white dark:bg-background-dark/50 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-lg font-medium text-[#111418] dark:text-white">Spending vs. Budget</p>
+<p class="text-4xl font-bold text-[#111418] dark:text-white mt-1">$1050 / $1550</p>
+<div class="flex items-center mt-1 gap-2">
+<p class="text-sm text-[#617589] dark:text-gray-400">This Month</p>
+<p class="text-sm font-medium text-green-600 dark:text-green-400">+10% vs last month</p>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-4">
+<div class="grid grid-cols-[120px_1fr] items-center gap-4">
+<p class="text-sm font-medium text-[#617589] dark:text-gray-400 truncate">Groceries</p>
+<div class="h-2.5 rounded-full bg-background-light/80 dark:bg-background-dark/80">
+<div class="h-full rounded-full bg-primary" style="width: 70%"></div>
+</div>
+</div>
+<div class="grid grid-cols-[120px_1fr] items-center gap-4">
+<p class="text-sm font-medium text-[#617589] dark:text-gray-400 truncate">Dining Out</p>
+<div class="h-2.5 rounded-full bg-background-light/80 dark:bg-background-dark/80">
+<div class="h-full rounded-full bg-primary" style="width: 67%"></div>
+</div>
+</div>
+<div class="grid grid-cols-[120px_1fr] items-center gap-4">
+<p class="text-sm font-medium text-[#617589] dark:text-gray-400 truncate">Entertainment</p>
+<div class="h-2.5 rounded-full bg-background-light/80 dark:bg-background-dark/80">
+<div class="h-full rounded-full bg-primary" style="width: 75%"></div>
+</div>
+</div>
+<div class="grid grid-cols-[120px_1fr] items-center gap-4">
+<p class="text-sm font-medium text-[#617589] dark:text-gray-400 truncate">Transportation</p>
+<div class="h-2.5 rounded-full bg-background-light/80 dark:bg-background-dark/80">
+<div class="h-full rounded-full bg-primary" style="width: 67%"></div>
+</div>
+</div>
+<div class="grid grid-cols-[120px_1fr] items-center gap-4">
+<p class="text-sm font-medium text-[#617589] dark:text-gray-400 truncate">Shopping</p>
+<div class="h-2.5 rounded-full bg-background-light/80 dark:bg-background-dark/80">
+<div class="h-full rounded-full bg-primary" style="width: 63%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<style>
+      input[type="radio"]:checked + span {
+        background-color: white;
+        color: #1173d4;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+      .dark input[type="radio"]:checked + span {
+        background-color: #101922;
+        color: #1173d4;
+      }
+    </style>
+
+</body></html>
