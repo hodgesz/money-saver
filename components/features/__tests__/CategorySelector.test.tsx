@@ -52,10 +52,15 @@ describe('CategorySelector', () => {
     })
   })
 
-  it('should render loading state initially', () => {
+  it('should render loading state initially', async () => {
     render(<CategorySelector value="" onChange={mockOnChange} />)
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
+
+    // Wait for loading to complete to avoid act() warnings
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeInTheDocument()
+    })
   })
 
   it('should load and display categories', async () => {
@@ -151,8 +156,12 @@ describe('CategorySelector', () => {
       />
     )
 
+    // Label is rendered immediately
+    expect(screen.getByText('Transaction Category')).toBeInTheDocument()
+
+    // Wait for component to finish loading to avoid act() warnings
     await waitFor(() => {
-      expect(screen.getByText('Transaction Category')).toBeInTheDocument()
+      expect(screen.getByRole('combobox')).toBeInTheDocument()
     })
   })
 
@@ -165,9 +174,13 @@ describe('CategorySelector', () => {
       />
     )
 
+    // Wait for component to finish loading
     await waitFor(() => {
-      expect(screen.getByText('Category is required')).toBeInTheDocument()
+      expect(screen.getByRole('combobox')).toBeInTheDocument()
     })
+
+    // Error message should be displayed
+    expect(screen.getByText('Category is required')).toBeInTheDocument()
   })
 
   it('should group system and custom categories', async () => {
