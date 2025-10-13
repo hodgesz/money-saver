@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { transactionService } from '@/lib/services/transactions'
@@ -13,6 +13,7 @@ import type { Transaction, Category } from '@/types'
 export default function TransactionsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const isMountedRef = useRef(false)
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -26,16 +27,73 @@ export default function TransactionsPage() {
     }
   }, [user, authLoading, router])
 
+  // Set mounted flag
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   // Fetch data on mount
   useEffect(() => {
+    let cancelled = false
+
+    const fetchData = async () => {
+      if (cancelled) return
+
+      if (!cancelled) {
+        setLoading(true)
+        setError(null)
+      }
+
+      try {
+        // Fetch transactions and categories in parallel
+        const [transactionsResult, categoriesResult] = await Promise.all([
+          transactionService.getTransactions(),
+          categoryService.getCategories(),
+        ])
+
+        if (cancelled) return
+
+        // Batch all state updates together
+        const newTransactions = transactionsResult.error ? [] : (transactionsResult.data || [])
+        const newCategories = categoriesResult.error ? [] : (categoriesResult.data || [])
+        const newError = transactionsResult.error ? 'Failed to load transactions'
+                       : categoriesResult.error ? 'Failed to load categories'
+                       : null
+
+        // Single state update batch
+        if (!cancelled) {
+          setTransactions(newTransactions)
+          setCategories(newCategories)
+          setError(newError)
+          setLoading(false)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('An unexpected error occurred')
+          setLoading(false)
+        }
+      }
+    }
+
     if (user) {
       fetchData()
+    }
+
+    return () => {
+      cancelled = true
     }
   }, [user])
 
   const fetchData = async () => {
-    setLoading(true)
-    setError(null)
+    if (!isMountedRef.current) return
+
+    if (isMountedRef.current) {
+      setLoading(true)
+      setError(null)
+    }
 
     try {
       // Fetch transactions and categories in parallel
@@ -44,23 +102,27 @@ export default function TransactionsPage() {
         categoryService.getCategories(),
       ])
 
-      if (transactionsResult.error) {
-        setError('Failed to load transactions')
-        setTransactions([])
-      } else {
-        setTransactions(transactionsResult.data || [])
-      }
+      if (!isMountedRef.current) return
 
-      if (categoriesResult.error) {
-        setError('Failed to load categories')
-        setCategories([])
-      } else {
-        setCategories(categoriesResult.data || [])
+      // Batch all state updates together
+      const newTransactions = transactionsResult.error ? [] : (transactionsResult.data || [])
+      const newCategories = categoriesResult.error ? [] : (categoriesResult.data || [])
+      const newError = transactionsResult.error ? 'Failed to load transactions'
+                     : categoriesResult.error ? 'Failed to load categories'
+                     : null
+
+      // Single state update batch
+      if (isMountedRef.current) {
+        setTransactions(newTransactions)
+        setCategories(newCategories)
+        setError(newError)
+        setLoading(false)
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setError('An unexpected error occurred')
+        setLoading(false)
+      }
     }
   }
 

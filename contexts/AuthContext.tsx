@@ -31,25 +31,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load user on mount
   useEffect(() => {
-    loadUser()
-  }, [])
+    let isMounted = true
 
-  async function loadUser() {
-    try {
-      const { data, error } = await authService.getCurrentUser()
-      if (error) {
-        console.error('Error loading user:', error)
+    async function loadUser() {
+      try {
+        const { data, error } = await authService.getCurrentUser()
+
+        if (!isMounted) return
+
+        if (error) {
+          console.error('Error loading user:', error)
+          setUser(null)
+        } else {
+          setUser(data?.user || null)
+        }
+      } catch (error) {
+        if (!isMounted) return
+
+        console.error('Unexpected error loading user:', error)
         setUser(null)
-      } else {
-        setUser(data?.user || null)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      console.error('Unexpected error loading user:', error)
-      setUser(null)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    loadUser()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function signIn(credentials: AuthCredentials): Promise<AuthResult> {
     const result = await authService.signIn(credentials)
