@@ -35,6 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function loadUser() {
       try {
+        // First check if we have a session to avoid "Auth session missing!" warning
+        const { data: sessionData } = await authService.getSession()
+
+        if (!isMounted) return
+
+        // If no session, set user to null and skip getUser() call
+        if (!sessionData?.session) {
+          setUser(null)
+          if (isMounted) {
+            setLoading(false)
+          }
+          return
+        }
+
+        // We have a session, now get the full user data
         const { data, error } = await authService.getCurrentUser()
 
         if (!isMounted) return

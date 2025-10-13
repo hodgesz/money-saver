@@ -60,6 +60,7 @@ export interface TransactionFormData {
   category_id: string
   description: string
   merchant?: string
+  is_income: boolean
 }
 
 export interface CategoryFormData {
