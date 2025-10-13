@@ -98,7 +98,7 @@ export default function LoginPage() {
                 className="text-sm text-blue-600 hover:underline"
                 disabled={loading}
               >
-                Don't have an account? Sign up
+                Don&apos;t have an account? Sign up
               </button>
             </div>
           </form>
