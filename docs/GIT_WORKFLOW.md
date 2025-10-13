@@ -72,7 +72,19 @@ chore: upgrade Next.js to v14
 refactor: extract transaction logic to separate service
 ```
 
-#### 3. Creating a Pull Request
+#### 3. Running Security Review
+
+Before creating a PR, run a security review using Claude Code:
+
+```bash
+# In Claude Code, run the security review command
+/security-review
+
+# Review the findings and address any HIGH or MEDIUM severity issues
+# Document any accepted risks or false positives in PR description
+```
+
+#### 4. Creating a Pull Request
 
 ```bash
 # Push your branch to GitHub
@@ -80,23 +92,24 @@ git push -u origin feature/transaction-import
 
 # Create a PR on GitHub targeting 'develop'
 # Fill out the PR template with description and testing notes
+# Include security review results or confirmation that review was clean
 ```
 
-#### 4. Code Review Process
+#### 5. Code Review Process
 
 - All PRs require at least one approval before merging
 - Address review comments by pushing new commits to your branch
 - Keep PRs focused and reasonably sized (< 400 lines when possible)
 - Include tests with your changes
 
-#### 5. Merging
+#### 6. Merging
 
 ```bash
 # After PR approval, merge using GitHub's "Squash and merge" option
 # Delete the feature branch after merging
 ```
 
-#### 6. Releasing to Production
+#### 7. Releasing to Production
 
 When `develop` is stable and ready for release:
 
@@ -138,9 +151,10 @@ git push origin v1.0.0
    git fetch origin
    git rebase origin/develop
    ```
-5. **Clean Up**: Delete merged branches to keep repository tidy
-6. **Write Tests**: Include tests with new features
-7. **Update Documentation**: Keep docs in sync with code changes
+5. **Run Security Reviews**: Always run `/security-review` before creating PRs
+6. **Clean Up**: Delete merged branches to keep repository tidy
+7. **Write Tests**: Include tests with new features (follow TDD methodology)
+8. **Update Documentation**: Keep docs in sync with code changes
 
 ## Hotfix Process
 
