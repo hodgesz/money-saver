@@ -172,13 +172,17 @@ describe('TransactionsPage', () => {
 
       render(<TransactionsPage />)
 
-      // Wait for both form and list to load
+      // Wait for data to load
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add transaction/i })).toBeInTheDocument()
         expect(screen.getByText('Weekly groceries')).toBeInTheDocument()
       })
 
-      // Fill out form - query by ID to avoid ambiguity
+      // Fill out form - wait a bit for the form to be interactive
+      await waitFor(() => {
+        const amountInput = document.querySelector('#amount') as HTMLInputElement
+        expect(amountInput).not.toBeNull()
+      })
+
       const amountInput = document.querySelector('#amount') as HTMLInputElement
       const categorySelect = document.querySelector('#category_id') as HTMLSelectElement
       const descriptionInput = document.querySelector('#description') as HTMLInputElement
@@ -213,14 +217,20 @@ describe('TransactionsPage', () => {
 
       render(<TransactionsPage />)
 
+      // Wait for data to load
       await waitFor(() => {
-        expect(screen.getByLabelText(/amount/i)).toBeInTheDocument()
+        expect(screen.getByText('Weekly groceries')).toBeInTheDocument()
+      })
+
+      // Wait for form to be interactive
+      await waitFor(() => {
+        const amountInput = document.querySelector('#amount') as HTMLInputElement
+        expect(amountInput).not.toBeNull()
       })
 
       // Clear mock to track new calls
       ;(transactionService.getTransactions as jest.Mock).mockClear()
 
-      // Fill and submit form - query by ID to avoid ambiguity
       const amountInput = document.querySelector('#amount') as HTMLInputElement
       const categorySelect = document.querySelector('#category_id') as HTMLSelectElement
       const descriptionInput = document.querySelector('#description') as HTMLInputElement
