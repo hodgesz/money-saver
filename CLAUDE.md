@@ -11,7 +11,7 @@ Money Saver is an application for tracking spending to help with budgeting and s
 This project uses **Supabase** as its backend database and API platform.
 
 ### Supabase Configuration
-- Project reference: `wudvwqumqzlviymxohta`
+- Project reference: `fiwowogxfgqzjmuytmow`
 - MCP server is configured for database operations
 - Access via the Supabase MCP tools available in Claude Code
 
