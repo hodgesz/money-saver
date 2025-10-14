@@ -88,9 +88,26 @@ export const transactionService = {
    */
   async createTransaction(transactionData: TransactionFormData) {
     const supabase = createClient()
+
+    // Get the current authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        data: null,
+        error: { message: 'User not authenticated', details: authError?.message }
+      }
+    }
+
+    // Add user_id to the transaction data
+    const transactionWithUser = {
+      ...transactionData,
+      user_id: user.id,
+    }
+
     const { data, error } = await supabase
       .from('transactions')
-      .insert([transactionData])
+      .insert([transactionWithUser])
       .select()
 
     // Return the first item or null

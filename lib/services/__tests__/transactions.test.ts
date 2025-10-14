@@ -28,6 +28,12 @@ describe('Transaction Service', () => {
       ilike: jest.fn().mockReturnThis(),
       range: jest.fn().mockReturnThis(),
       single: jest.fn(),
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: 'user-123', email: 'test@example.com' } },
+          error: null,
+        }),
+      },
     }
 
     ;(createClient as jest.Mock).mockReturnValue(mockSupabaseClient)
@@ -265,7 +271,10 @@ describe('Transaction Service', () => {
       const result = await transactionService.createTransaction(transactionData)
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('transactions')
-      expect(mockSupabaseClient.insert).toHaveBeenCalledWith([transactionData])
+      expect(mockSupabaseClient.insert).toHaveBeenCalledWith([{
+        ...transactionData,
+        user_id: 'user-123',
+      }])
       expect(mockSupabaseClient.select).toHaveBeenCalled()
       expect(result.data).toEqual(mockCreatedTransaction)
       expect(result.error).toBeNull()
