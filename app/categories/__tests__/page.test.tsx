@@ -14,6 +14,7 @@ jest.mock('next/navigation', () => ({
     push: jest.fn(),
     replace: jest.fn(),
   })),
+  usePathname: jest.fn(() => '/categories'),
 }))
 
 const mockCategories = [
