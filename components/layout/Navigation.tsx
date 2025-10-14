@@ -13,6 +13,7 @@ export function Navigation() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/transactions', label: 'Transactions' },
     { href: '/categories', label: 'Categories' },
+    { href: '/budgets', label: 'Budgets' },
   ]
 
   const isActive = (href: string) => pathname === href
