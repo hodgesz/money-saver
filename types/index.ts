@@ -30,9 +30,9 @@ export interface Budget {
   user_id: string
   category_id: string
   amount: number
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
   start_date: string
-  end_date?: string
+  end_date?: string | null
   created_at: string
   updated_at: string
 }
@@ -72,7 +72,7 @@ export interface CategoryFormData {
 export interface BudgetFormData {
   category_id: string
   amount: number
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
   start_date: string
   end_date?: string
 }
