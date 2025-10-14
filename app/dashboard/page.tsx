@@ -1,13 +1,13 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/Button'
+import { Navigation } from '@/components/layout/Navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function DashboardPage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -15,10 +15,6 @@ export default function DashboardPage() {
       router.push('/login')
     }
   }, [user, loading, router])
-
-  async function handleSignOut() {
-    await signOut()
-  }
 
   if (loading) {
     return (
@@ -33,14 +29,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Button onClick={handleSignOut} variant="secondary">
-            Sign out
-          </Button>
-        </div>
 
         <Card>
           <CardHeader>
@@ -73,6 +66,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   )

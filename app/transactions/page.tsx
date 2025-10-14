@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { Navigation } from '@/components/layout/Navigation'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
 import { TransactionForm } from '@/components/features/TransactionForm'
@@ -171,8 +172,10 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Transactions</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Transactions</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Transaction Form - Left side on large screens */}
@@ -204,6 +207,7 @@ export default function TransactionsPage() {
             />
           </Card>
         </div>
+      </div>
       </div>
     </div>
   )

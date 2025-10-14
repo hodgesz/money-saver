@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { Navigation } from '@/components/layout/Navigation'
 import { categoryService } from '@/lib/services/categories'
 import { CategoryForm } from '@/components/features/CategoryForm'
 import { CategoryList } from '@/components/features/CategoryList'
@@ -169,8 +170,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Categories</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Categories</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Category Form - Left side on large screens */}
@@ -202,6 +205,7 @@ export default function CategoriesPage() {
             />
           </Card>
         </div>
+      </div>
       </div>
     </div>
   )
