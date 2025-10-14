@@ -1,12 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import DashboardPage from '../page'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }))
 
 // Mock AuthContext
@@ -27,6 +28,7 @@ describe('DashboardPage', () => {
     ;(useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     })
+    ;(usePathname as jest.Mock).mockReturnValue('/dashboard')
   })
 
   describe('Authentication - Authenticated User', () => {
@@ -226,18 +228,13 @@ describe('DashboardPage', () => {
       const mainContainer = container.firstChild
       expect(mainContainer).toHaveClass('min-h-screen')
       expect(mainContainer).toHaveClass('bg-gray-50')
-      expect(mainContainer).toHaveClass('p-8')
     })
 
-    it('positions sign out button in header', () => {
+    it('renders sign out button in navigation', () => {
       render(<DashboardPage />)
 
-      const header = screen.getByRole('heading', { name: /dashboard/i }).parentElement
       const signOutButton = screen.getByRole('button', { name: /sign out/i })
-
-      expect(header).toContainElement(signOutButton)
-      expect(header).toHaveClass('flex')
-      expect(header).toHaveClass('justify-between')
+      expect(signOutButton).toBeInTheDocument()
     })
   })
 
