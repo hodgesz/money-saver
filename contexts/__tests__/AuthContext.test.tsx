@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js'
 // Mock the auth service
 jest.mock('@/lib/services/auth', () => ({
   authService: {
+    getSession: jest.fn(),
     getCurrentUser: jest.fn(),
     signIn: jest.fn(),
     signUp: jest.fn(),
@@ -36,6 +37,11 @@ describe('AuthContext', () => {
 
   describe('AuthProvider', () => {
     it('should provide initial loading state', () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -50,6 +56,11 @@ describe('AuthContext', () => {
     })
 
     it('should load current user on mount', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: mockUser },
         error: null,
@@ -68,6 +79,11 @@ describe('AuthContext', () => {
     })
 
     it('should handle no user on mount', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -86,6 +102,11 @@ describe('AuthContext', () => {
 
     it('should handle error loading user', async () => {
       const mockError = { message: 'Network error' }
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: null,
         error: mockError,
@@ -105,6 +126,11 @@ describe('AuthContext', () => {
 
   describe('signIn', () => {
     it('should sign in user and update state', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -136,6 +162,11 @@ describe('AuthContext', () => {
     })
 
     it('should handle sign in errors', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -170,6 +201,11 @@ describe('AuthContext', () => {
 
   describe('signUp', () => {
     it('should sign up user and update state', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -201,6 +237,11 @@ describe('AuthContext', () => {
     })
 
     it('should handle sign up errors', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -235,6 +276,11 @@ describe('AuthContext', () => {
 
   describe('signOut', () => {
     it('should sign out user and clear state', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: mockUser },
         error: null,
@@ -263,6 +309,11 @@ describe('AuthContext', () => {
     })
 
     it('should handle sign out errors', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: mockUser },
         error: null,
@@ -292,6 +343,11 @@ describe('AuthContext', () => {
 
   describe('resetPassword', () => {
     it('should send password reset email', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
@@ -321,6 +377,11 @@ describe('AuthContext', () => {
 
   describe('updatePassword', () => {
     it('should update user password', async () => {
+      ;(authService.getSession as jest.Mock).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      })
+
       ;(authService.getCurrentUser as jest.Mock).mockResolvedValue({
         data: { user: mockUser },
         error: null,
