@@ -4,6 +4,7 @@ import DashboardPage from '../page'
 import { useAuth } from '@/contexts/AuthContext'
 import { analyticsService } from '@/lib/services/analytics'
 import { transactionService } from '@/lib/services/transactions'
+import { categoryService } from '@/lib/services/categories'
 import { useRouter, usePathname } from 'next/navigation'
 
 // Mock Next.js navigation
@@ -29,7 +30,13 @@ jest.mock('@/lib/services/analytics', () => ({
 
 jest.mock('@/lib/services/transactions', () => ({
   transactionService: {
-    getTransactions: jest.fn(),
+    getTransactionsWithFilters: jest.fn(),
+  },
+}))
+
+jest.mock('@/lib/services/categories', () => ({
+  categoryService: {
+    getCategories: jest.fn(),
   },
 }))
 
@@ -44,6 +51,16 @@ describe('DashboardPage', () => {
     jest.clearAllMocks()
     ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
     ;(usePathname as jest.Mock).mockReturnValue('/dashboard')
+
+    // Default categoryService mock
+    ;(categoryService.getCategories as jest.Mock).mockResolvedValue({
+      data: [
+        { id: 'Groceries', name: 'Groceries', icon: '🛒' },
+        { id: 'Transport', name: 'Transport', icon: '🚗' },
+        { id: 'Category', name: 'Category', icon: '📁' },
+      ],
+      error: null,
+    })
   })
 
   describe('Authentication', () => {
@@ -91,7 +108,7 @@ describe('DashboardPage', () => {
 
     it('fetches all analytics data on mount', async () => {
       const mockGetMonthlySpending = jest.fn().mockResolvedValue({
-        data: { total: 500, count: 10, month: 1, year: 2024 },
+        data: { income: 500, expenses: 400, net: 100, transactionCount: 10, month: 1, year: 2024 },
         error: null,
       })
       const mockGetCategoryBreakdown = jest.fn().mockResolvedValue({
@@ -115,7 +132,7 @@ describe('DashboardPage', () => {
       ;(analyticsService.getCategoryBreakdown as jest.Mock) = mockGetCategoryBreakdown
       ;(analyticsService.getSpendingTrends as jest.Mock) = mockGetSpendingTrends
       ;(analyticsService.getBudgetSummary as jest.Mock) = mockGetBudgetSummary
-      ;(transactionService.getTransactions as jest.Mock) = mockGetTransactions
+      ;(transactionService.getTransactionsWithFilters as jest.Mock) = mockGetTransactions
 
       render(<DashboardPage />)
 
@@ -130,7 +147,7 @@ describe('DashboardPage', () => {
 
     it('displays spending overview component', async () => {
       ;(analyticsService.getMonthlySpending as jest.Mock).mockResolvedValue({
-        data: { total: 1234.56, count: 15, month: 1, year: 2024 },
+        data: { income: 2000, expenses: 1234.56, net: 765.44, transactionCount: 15, month: 1, year: 2024 },
         error: null,
       })
 
@@ -200,7 +217,7 @@ describe('DashboardPage', () => {
     })
 
     it('displays recent transactions list component', async () => {
-      ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
         data: [
           {
             id: '1',
@@ -243,7 +260,7 @@ describe('DashboardPage', () => {
       ;(analyticsService.getBudgetSummary as jest.Mock).mockReturnValue(
         new Promise(() => {})
       )
-      ;(transactionService.getTransactions as jest.Mock).mockReturnValue(
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockReturnValue(
         new Promise(() => {})
       )
 
@@ -314,7 +331,7 @@ describe('DashboardPage', () => {
     })
 
     it('displays error when transactions fetch fails', async () => {
-      ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
         data: null,
         error: { message: 'Failed to fetch transactions' },
       })
@@ -328,7 +345,7 @@ describe('DashboardPage', () => {
 
     it('displays partial content when some fetches succeed', async () => {
       ;(analyticsService.getMonthlySpending as jest.Mock).mockResolvedValue({
-        data: { total: 500, count: 10, month: 1, year: 2024 },
+        data: { income: 600, expenses: 500, net: 100, transactionCount: 10, month: 1, year: 2024 },
         error: null,
       })
       ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -355,7 +372,7 @@ describe('DashboardPage', () => {
 
     it('displays empty state when no transactions exist', async () => {
       ;(analyticsService.getMonthlySpending as jest.Mock).mockResolvedValue({
-        data: { total: 0, count: 0, month: 1, year: 2024 },
+        data: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 1, year: 2024 },
         error: null,
       })
       ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -370,7 +387,7 @@ describe('DashboardPage', () => {
         data: [],
         error: null,
       })
-      ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
         data: [],
         error: null,
       })
@@ -385,7 +402,7 @@ describe('DashboardPage', () => {
 
     it('shows empty state message for new users', async () => {
       ;(analyticsService.getMonthlySpending as jest.Mock).mockResolvedValue({
-        data: { total: 0, count: 0, month: 1, year: 2024 },
+        data: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 1, year: 2024 },
         error: null,
       })
 
@@ -406,7 +423,7 @@ describe('DashboardPage', () => {
 
       // Mock all services with successful responses
       ;(analyticsService.getMonthlySpending as jest.Mock).mockResolvedValue({
-        data: { total: 1000, count: 20, month: 1, year: 2024 },
+        data: { income: 1500, expenses: 1000, net: 500, transactionCount: 20, month: 1, year: 2024 },
         error: null,
       })
       ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -439,7 +456,7 @@ describe('DashboardPage', () => {
         ],
         error: null,
       })
-      ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
         data: [
           {
             id: '1',

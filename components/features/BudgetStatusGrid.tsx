@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useEffect, useState } from 'react'
-import { analyticsService, type BudgetSummary } from '@/lib/services/analytics'
+import { analyticsService, type BudgetStatus } from '@/lib/services/analytics'
 
 export function BudgetStatusGrid() {
-  const [budgets, setBudgets] = useState<BudgetSummary[]>([])
+  const [budgets, setBudgets] = useState<BudgetStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -90,19 +90,19 @@ export function BudgetStatusGrid() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {budgets.map((budget) => (
-            <div key={budget.budgetId} className="space-y-2">
+          {budgets.map((budgetStatus) => (
+            <div key={budgetStatus.budget.id} className="space-y-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-sm">{budget.categoryName}</h3>
-                  <p className="text-xs text-gray-500 capitalize">{budget.period}</p>
+                  <h3 className="font-semibold text-sm">{budgetStatus.budget.category_id}</h3>
+                  <p className="text-xs text-gray-500 capitalize">{budgetStatus.budget.period}</p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-sm font-semibold ${getTextColor(budget.percentage)}`}>
-                    {budget.percentage.toFixed(0)}%
+                  <p className={`text-sm font-semibold ${getTextColor(budgetStatus.percentage)}`}>
+                    {budgetStatus.percentage.toFixed(0)}%
                   </p>
                   <p className="text-xs text-gray-600">
-                    ${budget.spentAmount.toFixed(2)} / ${budget.budgetAmount.toFixed(2)}
+                    ${budgetStatus.spent.toFixed(2)} / ${budgetStatus.budget.amount.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -110,18 +110,18 @@ export function BudgetStatusGrid() {
               {/* Progress bar */}
               <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className={`h-2.5 rounded-full transition-all ${getStatusColor(budget.percentage)}`}
-                  style={{ width: `${Math.min(budget.percentage, 100)}%` }}
+                  className={`h-2.5 rounded-full transition-all ${getStatusColor(budgetStatus.percentage)}`}
+                  style={{ width: `${Math.min(budgetStatus.percentage, 100)}%` }}
                 />
               </div>
 
               {/* Remaining amount */}
               <div className="flex justify-between text-xs">
                 <span className="text-gray-600">
-                  {budget.remainingAmount >= 0 ? 'Remaining' : 'Over budget'}
+                  {budgetStatus.remaining >= 0 ? 'Remaining' : 'Over budget'}
                 </span>
-                <span className={budget.remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  ${Math.abs(budget.remainingAmount).toFixed(2)}
+                <span className={budgetStatus.remaining >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  ${Math.abs(budgetStatus.remaining).toFixed(2)}
                 </span>
               </div>
             </div>
