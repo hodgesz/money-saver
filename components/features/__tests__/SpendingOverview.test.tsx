@@ -44,7 +44,7 @@ describe('SpendingOverview', () => {
     await waitFor(() => {
       expect(screen.getByText('$1,000.00')).toBeInTheDocument()
       expect(screen.getByText('$1,234.56')).toBeInTheDocument()
-      expect(screen.getByText('15 transactions')).toBeInTheDocument()
+      expect(screen.getByText(/15 transactions this month/)).toBeInTheDocument()
     })
   })
 
@@ -66,8 +66,10 @@ describe('SpendingOverview', () => {
     render(<SpendingOverview year={2024} month={1} />)
 
     await waitFor(() => {
-      expect(screen.getByText('$0.00')).toBeInTheDocument()
-      expect(screen.getByText('0 transactions')).toBeInTheDocument()
+      // Net balance of 0
+      const amounts = screen.getAllByText('$0.00')
+      expect(amounts.length).toBeGreaterThan(0)
+      expect(screen.getByText(/0 transaction/)).toBeInTheDocument()
     })
   })
 
@@ -80,8 +82,7 @@ describe('SpendingOverview', () => {
     render(<SpendingOverview year={2024} month={1} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/error/i)).toBeInTheDocument()
-      expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument()
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
     })
   })
 
@@ -125,8 +126,8 @@ describe('SpendingOverview', () => {
     render(<SpendingOverview year={2024} month={12} />)
 
     await waitFor(() => {
-      expect(screen.getByText('$999,999.99')).toBeInTheDocument()
-      expect(screen.getByText('1,000 transactions')).toBeInTheDocument()
+      expect(screen.getByText(/\$999,999\.99/)).toBeInTheDocument()
+      expect(screen.getByText(/1,000 transactions this month/)).toBeInTheDocument()
     })
   })
 

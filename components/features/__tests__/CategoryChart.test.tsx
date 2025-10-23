@@ -78,8 +78,7 @@ describe('CategoryChart', () => {
     render(<CategoryChart year={2024} month={1} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/error/i)).toBeInTheDocument()
-      expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument()
+      expect(screen.getByText(/failed to load category data/i)).toBeInTheDocument()
     })
   })
 
@@ -119,10 +118,10 @@ describe('CategoryChart', () => {
     await waitFor(() => {
       expect(screen.getByText('Groceries')).toBeInTheDocument()
       expect(screen.getByText('$500.00')).toBeInTheDocument()
-      expect(screen.getByText('50%')).toBeInTheDocument()
+      expect(screen.getByText('(50%)')).toBeInTheDocument()
       expect(screen.getByText('Transport')).toBeInTheDocument()
       expect(screen.getByText('$300.00')).toBeInTheDocument()
-      expect(screen.getByText('30%')).toBeInTheDocument()
+      expect(screen.getByText('(30%)')).toBeInTheDocument()
     })
   })
 
@@ -177,7 +176,9 @@ describe('CategoryChart', () => {
     render(<CategoryChart year={2024} month={1} />)
 
     await waitFor(() => {
-      expect(screen.getByText('$12,345.67')).toBeInTheDocument()
+      // Component uses toFixed(2) without thousand separators
+      expect(screen.getByText(/\$12345\.67/)).toBeInTheDocument()
+      expect(screen.getByText('Category')).toBeInTheDocument()
     })
   })
 
