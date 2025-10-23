@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, ChangeEvent } from 'react'
+import { useState, useMemo, useCallback, ChangeEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -30,10 +30,10 @@ export function BudgetList({
   const [sortBy, setSortBy] = useState<SortOption>('amount')
 
   // Helper function to get category name by ID
-  const getCategoryName = (categoryId: string): string => {
+  const getCategoryName = useCallback((categoryId: string): string => {
     const category = categories.find((c) => c.id === categoryId)
     return category?.name || 'Unknown Category'
-  }
+  }, [categories])
 
   // Filter budgets by search term (searches category name)
   const filteredBudgets = useMemo(() => {
@@ -43,7 +43,7 @@ export function BudgetList({
       const categoryName = getCategoryName(budget.category_id)
       return categoryName.toLowerCase().includes(searchTerm.toLowerCase())
     })
-  }, [budgets, categories, searchTerm])
+  }, [budgets, searchTerm, getCategoryName])
 
   // Sort budgets
   const sortedBudgets = useMemo(() => {
