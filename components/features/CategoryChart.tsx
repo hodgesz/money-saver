@@ -16,8 +16,13 @@ const DEFAULT_COLORS = [
   '#f97316', // orange
 ]
 
-export function CategoryChart() {
-  const [categories, setCategories] = useState<CategoryBreakdown[]>([])
+interface CategoryChartProps {
+  year: number
+  month: number
+}
+
+export function CategoryChart({ year, month }: CategoryChartProps) {
+  const [breakdown, setBreakdown] = useState<CategoryBreakdown | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +31,7 @@ export function CategoryChart() {
       setLoading(true)
       setError(null)
 
-      const { data, error: err } = await analyticsService.getCategoryBreakdown()
+      const { data, error: err } = await analyticsService.getCategoryBreakdown(year, month)
 
       if (err) {
         setError('Failed to load category data')
@@ -34,12 +39,12 @@ export function CategoryChart() {
         return
       }
 
-      setCategories(data || [])
+      setBreakdown(data)
       setLoading(false)
     }
 
     loadCategories()
-  }, [])
+  }, [year, month])
 
   if (loading) {
     return (
@@ -67,7 +72,7 @@ export function CategoryChart() {
     )
   }
 
-  if (!categories || categories.length === 0) {
+  if (!breakdown || Object.keys(breakdown).length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -80,11 +85,20 @@ export function CategoryChart() {
     )
   }
 
+  // Convert breakdown object to array sorted by total descending
+  const categories = Object.entries(breakdown)
+    .map(([categoryId, data]) => ({
+      name: categoryId,
+      value: data.total,
+      percentage: data.percentage,
+      count: data.count,
+    }))
+    .sort((a, b) => b.value - a.value)
+
   // Prepare data for chart
   const chartData = categories.map((cat, index) => ({
-    name: cat.categoryName,
-    value: cat.amount,
-    color: cat.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
+    ...cat,
+    color: DEFAULT_COLORS[index % DEFAULT_COLORS.length],
   }))
 
   return (
@@ -93,7 +107,7 @@ export function CategoryChart() {
         <CardTitle>Spending by Category</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <div className="h-80" role="img" aria-label="Category spending breakdown">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -101,7 +115,7 @@ export function CategoryChart() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percentage }) => `${name}: ${percentage.toFixed(0)}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -120,17 +134,17 @@ export function CategoryChart() {
 
         <div className="mt-4 space-y-2">
           {categories.map((cat, index) => (
-            <div key={cat.categoryId} className="flex justify-between items-center text-sm">
+            <div key={cat.name} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
                 <div
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: cat.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length] }}
+                  style={{ backgroundColor: DEFAULT_COLORS[index % DEFAULT_COLORS.length] }}
                 />
-                <span>{cat.categoryName}</span>
+                <span>{cat.name}</span>
               </div>
               <div className="text-right">
-                <span className="font-semibold">${cat.amount.toFixed(2)}</span>
-                <span className="text-gray-500 ml-2">({cat.percentage.toFixed(1)}%)</span>
+                <span className="font-semibold">${cat.value.toFixed(2)}</span>
+                <span className="text-gray-500 ml-2">({cat.percentage.toFixed(0)}%)</span>
               </div>
             </div>
           ))}

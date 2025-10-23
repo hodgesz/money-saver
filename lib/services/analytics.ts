@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/client'
 
 export interface MonthlySpending {
-  total: number
-  count: number
+  income: number
+  expenses: number
+  net: number
+  transactionCount: number
   month: number
   year: number
 }
@@ -46,7 +48,6 @@ export const analyticsService = {
       const { data: transactions, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('is_income', false) // Only expenses
         .gte('date', startDate)
         .lt('date', endDate)
 
@@ -57,8 +58,10 @@ export const analyticsService = {
       if (!transactions || transactions.length === 0) {
         return {
           data: {
-            total: 0,
-            count: 0,
+            income: 0,
+            expenses: 0,
+            net: 0,
+            transactionCount: 0,
             month,
             year,
           },
@@ -66,14 +69,20 @@ export const analyticsService = {
         }
       }
 
-      // Filter out income transactions (in case mock doesn't filter)
-      const expenses = transactions.filter((tx) => !tx.is_income)
-      const total = expenses.reduce((sum, tx) => sum + tx.amount, 0)
+      // Separate income and expenses
+      const incomeTransactions = transactions.filter((tx) => tx.is_income)
+      const expenseTransactions = transactions.filter((tx) => !tx.is_income)
+
+      const income = incomeTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+      const expenses = expenseTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+      const net = income - expenses
 
       return {
         data: {
-          total,
-          count: expenses.length,
+          income,
+          expenses,
+          net,
+          transactionCount: transactions.length,
           month,
           year,
         },
@@ -187,8 +196,8 @@ export const analyticsService = {
       const monthMap = new Map<string, { total: number; count: number }>()
 
       expenses.forEach((transaction) => {
-        const date = new Date(transaction.date)
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        // Extract year-month directly from ISO string to avoid timezone issues
+        const monthKey = transaction.date.substring(0, 7) // 'YYYY-MM-DD' -> 'YYYY-MM'
 
         if (monthMap.has(monthKey)) {
           const existing = monthMap.get(monthKey)!

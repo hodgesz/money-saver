@@ -29,12 +29,10 @@ describe('analyticsService', () => {
 
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockReturnValue({
-              lt: jest.fn().mockResolvedValue({
-                data: mockTransactions,
-                error: null,
-              }),
+          gte: jest.fn().mockReturnValue({
+            lt: jest.fn().mockResolvedValue({
+              data: mockTransactions,
+              error: null,
             }),
           }),
         }),
@@ -44,8 +42,10 @@ describe('analyticsService', () => {
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('transactions')
       expect(result.data).toEqual({
-        total: 425.50,
-        count: 3,
+        income: 0,
+        expenses: 425.50,
+        net: -425.50,
+        transactionCount: 3,
         month: 1,
         year: 2024,
       })
@@ -55,12 +55,10 @@ describe('analyticsService', () => {
     it('returns zero for empty month', async () => {
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockReturnValue({
-              lt: jest.fn().mockResolvedValue({
-                data: [],
-                error: null,
-              }),
+          gte: jest.fn().mockReturnValue({
+            lt: jest.fn().mockResolvedValue({
+              data: [],
+              error: null,
             }),
           }),
         }),
@@ -69,28 +67,26 @@ describe('analyticsService', () => {
       const result = await analyticsService.getMonthlySpending(2024, 1)
 
       expect(result.data).toEqual({
-        total: 0,
-        count: 0,
+        income: 0, expenses: 0, net: 0,
+        transactionCount: 0,
         month: 1,
         year: 2024,
       })
     })
 
-    it('excludes income transactions from spending calculation', async () => {
+    it('separates income and expenses correctly', async () => {
       const mockTransactions = [
         { amount: 100, is_income: false, date: '2024-01-15' },
-        { amount: 500, is_income: true, date: '2024-01-16' }, // Should be excluded
+        { amount: 500, is_income: true, date: '2024-01-16' },
         { amount: 75, is_income: false, date: '2024-01-25' },
       ]
 
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockReturnValue({
-              lt: jest.fn().mockResolvedValue({
-                data: mockTransactions,
-                error: null,
-              }),
+          gte: jest.fn().mockReturnValue({
+            lt: jest.fn().mockResolvedValue({
+              data: mockTransactions,
+              error: null,
             }),
           }),
         }),
@@ -98,8 +94,10 @@ describe('analyticsService', () => {
 
       const result = await analyticsService.getMonthlySpending(2024, 1)
 
-      expect(result.data?.total).toBe(175)
-      expect(result.data?.count).toBe(2)
+      expect(result.data?.income).toBe(500)
+      expect(result.data?.expenses).toBe(175)
+      expect(result.data?.net).toBe(325)
+      expect(result.data?.transactionCount).toBe(3)
     })
 
     it('handles database errors gracefully', async () => {
@@ -107,12 +105,10 @@ describe('analyticsService', () => {
 
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockReturnValue({
-              lt: jest.fn().mockResolvedValue({
-                data: null,
-                error: mockError,
-              }),
+          gte: jest.fn().mockReturnValue({
+            lt: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError,
             }),
           }),
         }),
@@ -127,12 +123,10 @@ describe('analyticsService', () => {
     it('handles authentication errors', async () => {
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockReturnValue({
-              lt: jest.fn().mockResolvedValue({
-                data: null,
-                error: { message: 'Not authenticated' },
-              }),
+          gte: jest.fn().mockReturnValue({
+            lt: jest.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'Not authenticated' },
             }),
           }),
         }),
@@ -418,8 +412,10 @@ describe('analyticsService', () => {
       expect(result.data).toHaveLength(2)
       expect(result.data?.[0].month).toBe('2024-01')
       expect(result.data?.[0].total).toBe(200)
+      expect(result.data?.[0].count).toBe(2)
       expect(result.data?.[1].month).toBe('2024-02')
       expect(result.data?.[1].total).toBe(200)
+      expect(result.data?.[1].count).toBe(2)
     })
   })
 

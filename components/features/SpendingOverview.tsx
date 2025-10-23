@@ -4,17 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useEffect, useState } from 'react'
 import { analyticsService, type MonthlySpending } from '@/lib/services/analytics'
 
-export function SpendingOverview() {
+interface SpendingOverviewProps {
+  year?: number
+  month?: number
+}
+
+export function SpendingOverview({ year, month }: SpendingOverviewProps = {}) {
   const [spending, setSpending] = useState<MonthlySpending | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Default to current year and month if not provided
+  const currentDate = new Date()
+  const targetYear = year ?? currentDate.getFullYear()
+  const targetMonth = month ?? currentDate.getMonth() + 1
 
   useEffect(() => {
     async function loadSpending() {
       setLoading(true)
       setError(null)
 
-      const { data, error: err } = await analyticsService.getMonthlySpending()
+      const { data, error: err } = await analyticsService.getMonthlySpending(targetYear, targetMonth)
 
       if (err) {
         setError('Failed to load spending data')
@@ -27,7 +37,7 @@ export function SpendingOverview() {
     }
 
     loadSpending()
-  }, [])
+  }, [targetYear, targetMonth])
 
   if (loading) {
     return (
@@ -68,8 +78,16 @@ export function SpendingOverview() {
     )
   }
 
-  const trendColor = spending.total >= 0 ? 'text-green-600' : 'text-red-600'
-  const trendIcon = spending.total >= 0 ? '↑' : '↓'
+  const trendColor = spending.net >= 0 ? 'text-green-600' : 'text-red-600'
+  const trendIcon = spending.net >= 0 ? '↑' : '↓'
+
+  // Format number with thousand separators
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
 
   return (
     <Card>
@@ -82,7 +100,7 @@ export function SpendingOverview() {
             <p className="text-sm text-gray-600">Net Balance</p>
             <div className="flex items-baseline gap-2">
               <p className={`text-3xl font-bold ${trendColor}`}>
-                ${Math.abs(spending.total).toFixed(2)}
+                {formatCurrency(Math.abs(spending.net))}
               </p>
               <span className={`text-xl ${trendColor}`}>{trendIcon}</span>
             </div>
@@ -92,21 +110,21 @@ export function SpendingOverview() {
             <div className="p-4 bg-green-50 rounded-lg">
               <p className="text-sm text-gray-600">Income</p>
               <p className="text-xl font-semibold text-green-700">
-                ${spending.income.toFixed(2)}
+                {formatCurrency(spending.income)}
               </p>
             </div>
 
             <div className="p-4 bg-red-50 rounded-lg">
               <p className="text-sm text-gray-600">Expenses</p>
               <p className="text-xl font-semibold text-red-700">
-                ${spending.expenses.toFixed(2)}
+                {formatCurrency(spending.expenses)}
               </p>
             </div>
           </div>
 
           <div className="pt-2 border-t">
             <p className="text-sm text-gray-600">
-              {spending.transactionCount} transaction{spending.transactionCount !== 1 ? 's' : ''} this month
+              {spending.transactionCount.toLocaleString()} transaction{spending.transactionCount !== 1 ? 's' : ''} this month
             </p>
           </div>
         </div>
