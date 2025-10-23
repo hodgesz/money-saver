@@ -8,11 +8,32 @@ import { TrendsChart } from '@/components/features/TrendsChart'
 import { BudgetStatusGrid } from '@/components/features/BudgetStatusGrid'
 import { RecentTransactionsList } from '@/components/features/RecentTransactionsList'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+
+  // Calculate current month and year for CategoryChart
+  const currentDate = useMemo(() => {
+    const now = new Date()
+    return {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1, // JavaScript months are 0-indexed
+    }
+  }, [])
+
+  // Calculate date range for TrendsChart (last 6 months)
+  const dateRange = useMemo(() => {
+    const now = new Date()
+    const sixMonthsAgo = new Date(now)
+    sixMonthsAgo.setMonth(now.getMonth() - 6)
+
+    return {
+      startDate: sixMonthsAgo.toISOString().split('T')[0], // YYYY-MM-DD format
+      endDate: now.toISOString().split('T')[0],
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -50,8 +71,8 @@ export default function DashboardPage() {
 
           {/* Middle Row - Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CategoryChart />
-            <TrendsChart />
+            <CategoryChart year={currentDate.year} month={currentDate.month} />
+            <TrendsChart startDate={dateRange.startDate} endDate={dateRange.endDate} />
           </div>
 
           {/* Bottom Row - Recent Transactions */}
