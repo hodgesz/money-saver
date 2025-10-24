@@ -149,14 +149,38 @@ export default function TransactionImportPage() {
     const errors: string[] = []
 
     try {
-      // Helper function to match category by name (case-insensitive)
-      const matchCategory = (categoryName?: string): string | null => {
+      // Helper function to find or create category by name (case-insensitive)
+      const findOrCreateCategory = async (categoryName?: string): Promise<string | null> => {
         if (!categoryName) return null
 
         const normalizedName = categoryName.toLowerCase().trim()
-        const match = categories.find(
+
+        // First, try to find existing category
+        let match = categories.find(
           (cat) => cat.name.toLowerCase() === normalizedName
         )
+
+        // If not found, create new category
+        if (!match) {
+          const { data: newCategory, error } = await categoryService.createCategory({
+            name: categoryName.trim(),
+            description: `Auto-created from CSV import`,
+          })
+
+          if (!error && newCategory) {
+            // Add to local categories array for future lookups in this batch
+            const newCat: Category = {
+              id: newCategory.id,
+              name: newCategory.name,
+              description: newCategory.description,
+              user_id: newCategory.user_id,
+              created_at: newCategory.created_at,
+            }
+            categories.push(newCat)
+            match = newCat
+          }
+        }
+
         return match ? match.id : null
       }
 
@@ -187,18 +211,25 @@ export default function TransactionImportPage() {
 
       // Process each batch in parallel
       for (const batch of filteredBatches) {
-        const promises = batch.map((transaction) =>
+        // First, resolve all category IDs for this batch
+        const categoryPromises = batch.map((transaction) =>
+          findOrCreateCategory(transaction.category)
+        )
+        const categoryIds = await Promise.all(categoryPromises)
+
+        // Then create all transactions with resolved category IDs
+        const transactionPromises = batch.map((transaction, index) =>
           transactionService.createTransaction({
             date: transaction.date,
             amount: transaction.amount,
             merchant: transaction.merchant,
             description: transaction.description,
-            category_id: matchCategory(transaction.category),
+            category_id: categoryIds[index],
             is_income: false,
           })
         )
 
-        const results = await Promise.all(promises)
+        const results = await Promise.all(transactionPromises)
 
         // Process results
         results.forEach((result, index) => {
