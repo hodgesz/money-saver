@@ -175,6 +175,32 @@ invalid-date,invalid-amount,Store B,Invalid`
 
     it('displays import progress during batch import', async () => {
       const user = userEvent.setup()
+
+      // Mock slow import to capture progress state
+      mockCreateTransaction.mockImplementation(() => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({
+              data: {
+                id: '1',
+                date: '2024-01-15',
+                amount: 45.99,
+                merchant: 'Store',
+                description: 'Test',
+                category_id: null,
+                user_id: 'test-user-123',
+                is_income: false,
+                created_at: '2024-01-01',
+                updated_at: '2024-01-01',
+                receipt_url: null,
+                account_id: null
+              },
+              error: null,
+            })
+          }, 200) // 200ms delay to ensure progress state is visible
+        })
+      })
+
       render(<TransactionImportPage />)
 
       const csvContent = `date,amount,merchant,description
@@ -190,11 +216,19 @@ invalid-date,invalid-amount,Store B,Invalid`
       })
 
       const importButton = await screen.findByRole('button', { name: /import.*transaction/i })
-      await user.click(importButton)
 
+      // Click button and immediately check for importing state (don't await)
+      user.click(importButton)
+
+      // Wait for importing text to appear
       await waitFor(() => {
-        expect(screen.getByText(/importing/i)).toBeInTheDocument()
-      })
+        expect(screen.getByText(/importing.*transactions/i)).toBeInTheDocument()
+      }, { timeout: 500 })
+
+      // Wait for import to complete
+      await waitFor(() => {
+        expect(screen.getByText(/successfully imported/i)).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
   })
 
