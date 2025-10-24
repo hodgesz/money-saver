@@ -3,12 +3,14 @@
 // GREEN PHASE: Implement TransactionImport page with multi-format support
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Navigation } from '@/components/layout/Navigation'
 import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
 import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
+import { categoryMappingService } from '@/lib/services/categoryMapping'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
 import type { Category } from '@/types'
@@ -112,16 +114,8 @@ export default function TransactionImportPage() {
     const errors: string[] = []
 
     try {
-      // Helper function to match category by name (case-insensitive)
-      const matchCategory = (categoryName?: string): string | null => {
-        if (!categoryName) return null
-
-        const normalizedName = categoryName.toLowerCase().trim()
-        const match = categories.find(
-          (cat) => cat.name.toLowerCase() === normalizedName
-        )
-        return match ? match.id : null
-      }
+      // Use smart categorization service to map transactions
+      // This intelligently matches based on keywords in merchant/description
 
       // Batch transactions into groups of 50 for parallel processing
       const BATCH_SIZE = 50
@@ -133,16 +127,23 @@ export default function TransactionImportPage() {
 
       // Process each batch in parallel
       for (const batch of batches) {
-        const promises = batch.map((transaction) =>
-          transactionService.createTransaction({
+        const promises = batch.map((transaction) => {
+          // Use smart categorization to find best matching category
+          const matchedCategory = categoryMappingService.matchCategory(
+            transaction.description,
+            transaction.merchant,
+            categories
+          )
+
+          return transactionService.createTransaction({
             date: transaction.date,
             amount: transaction.amount,
             merchant: transaction.merchant,
             description: transaction.description,
-            category_id: matchCategory(transaction.category),
+            category_id: matchedCategory?.id || null,
             is_income: false,
           })
-        )
+        })
 
         const results = await Promise.all(promises)
 
@@ -181,11 +182,13 @@ export default function TransactionImportPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-2">Import Transactions</h1>
-      <p className="text-gray-600 mb-8">
-        Upload a CSV or Excel file to import your transactions
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-2">Import Transactions</h1>
+        <p className="text-gray-600 mb-8">
+          Upload a CSV or Excel file to import your transactions
+        </p>
 
       {/* File Upload */}
       <Card className="mb-6">
@@ -360,6 +363,7 @@ export default function TransactionImportPage() {
           </div>
         </Card>
       )}
+      </div>
     </div>
   )
 }
