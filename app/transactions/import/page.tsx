@@ -1,15 +1,17 @@
 'use client'
 
 // GREEN PHASE: Implement TransactionImport page with multi-format support
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
 import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
 import { transactionService } from '@/lib/services/transactions'
+import { categoryService } from '@/lib/services/categories'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
+import type { Category } from '@/types'
 
 // Extended transaction type to include category info
 interface ExtendedTransaction extends ParsedTransaction {
@@ -27,6 +29,18 @@ export default function TransactionImportPage() {
   const [importSuccess, setImportSuccess] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [importProgress, setImportProgress] = useState(0)
+  const [categories, setCategories] = useState<Category[]>([])
+
+  // Load categories on mount for matching during import
+  useEffect(() => {
+    const loadCategories = async () => {
+      const { data, error } = await categoryService.getCategories()
+      if (!error && data) {
+        setCategories(data)
+      }
+    }
+    loadCategories()
+  }, [])
 
   const handleFileSelect = async (file: File | null) => {
     if (!file) {
@@ -98,6 +112,17 @@ export default function TransactionImportPage() {
     const errors: string[] = []
 
     try {
+      // Helper function to match category by name (case-insensitive)
+      const matchCategory = (categoryName?: string): string | null => {
+        if (!categoryName) return null
+
+        const normalizedName = categoryName.toLowerCase().trim()
+        const match = categories.find(
+          (cat) => cat.name.toLowerCase() === normalizedName
+        )
+        return match ? match.id : null
+      }
+
       // Batch transactions into groups of 50 for parallel processing
       const BATCH_SIZE = 50
       const batches: ExtendedTransaction[][] = []
@@ -114,7 +139,7 @@ export default function TransactionImportPage() {
             amount: transaction.amount,
             merchant: transaction.merchant,
             description: transaction.description,
-            category_id: null,
+            category_id: matchCategory(transaction.category),
             is_income: false,
           })
         )

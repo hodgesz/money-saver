@@ -51,7 +51,8 @@ export const transactionService = {
       query = query.eq('category_id', filters.categoryId)
     }
 
-    // Apply search filter (searches in description and merchant)
+    // Apply search filter (searches in description)
+    // TODO: Add merchant search - requires client-side filtering or raw SQL
     if (filters.search) {
       query = query.ilike('description', `%${filters.search}%`)
     }

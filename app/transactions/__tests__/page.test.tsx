@@ -55,8 +55,8 @@ describe('TransactionsPage', () => {
       loading: false,
     })
 
-    // Mock successful data fetching
-    ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+    // Mock successful data fetching with pagination
+    ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
       data: mockTransactions,
       error: null,
     })
@@ -94,11 +94,14 @@ describe('TransactionsPage', () => {
   })
 
   describe('Data Fetching', () => {
-    it('fetches transactions on mount', async () => {
+    it('fetches transactions on mount with pagination', async () => {
       render(<TransactionsPage />)
 
       await waitFor(() => {
-        expect(transactionService.getTransactions).toHaveBeenCalled()
+        expect(transactionService.getTransactionsWithFilters).toHaveBeenCalledWith({
+          page: 1,
+          limit: 25,
+        })
       })
     })
 
@@ -125,7 +128,7 @@ describe('TransactionsPage', () => {
     })
 
     it('handles transaction fetch error', async () => {
-      ;(transactionService.getTransactions as jest.Mock).mockResolvedValue({
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
         data: null,
         error: { message: 'Failed to fetch transactions' },
       })
@@ -230,7 +233,7 @@ describe('TransactionsPage', () => {
       })
 
       // Clear mock to track new calls
-      ;(transactionService.getTransactions as jest.Mock).mockClear()
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockClear()
 
       const amountInput = document.querySelector('#amount') as HTMLInputElement
       const categorySelect = document.querySelector('#category_id') as HTMLSelectElement
@@ -242,9 +245,12 @@ describe('TransactionsPage', () => {
       await user.type(descriptionInput, 'Test')
       await user.click(screen.getByRole('button', { name: /add transaction/i }))
 
-      // Should fetch transactions again
+      // Should fetch transactions again (reset to page 1)
       await waitFor(() => {
-        expect(transactionService.getTransactions).toHaveBeenCalled()
+        expect(transactionService.getTransactionsWithFilters).toHaveBeenCalledWith({
+          page: 1,
+          limit: 25,
+        })
       })
     })
   })
@@ -287,13 +293,16 @@ describe('TransactionsPage', () => {
       })
 
       // Clear mock to track new calls
-      ;(transactionService.getTransactions as jest.Mock).mockClear()
+      ;(transactionService.getTransactionsWithFilters as jest.Mock).mockClear()
 
       const deleteButton = screen.getByRole('button', { name: /delete.*weekly groceries/i })
       await user.click(deleteButton)
 
       await waitFor(() => {
-        expect(transactionService.getTransactions).toHaveBeenCalled()
+        expect(transactionService.getTransactionsWithFilters).toHaveBeenCalledWith({
+          page: 1,
+          limit: 25,
+        })
       })
     })
   })

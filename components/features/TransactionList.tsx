@@ -38,7 +38,10 @@ export function TransactionList({
     return map
   }, [categories])
 
-  // Filter and sort transactions
+  // Filter and sort transactions (client-side)
+  // NOTE: These filters only apply to transactions on the current page.
+  // For server-side filtering across all transactions, the parent component
+  // should pass categoryId/search to the backend query.
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions]
 
