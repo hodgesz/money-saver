@@ -28,3 +28,19 @@ jest.mock('next/navigation', () => ({
 // Mock environment variables if needed
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key'
+
+// Mock File.prototype.text() for CSV parsing tests
+if (typeof File !== 'undefined' && !File.prototype.text) {
+  File.prototype.text = function() {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        resolve(reader.result)
+      }
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'))
+      }
+      reader.readAsText(this)
+    })
+  }
+}

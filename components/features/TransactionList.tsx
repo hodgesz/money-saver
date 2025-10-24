@@ -105,7 +105,8 @@ export function TransactionList({
     }).format(date)
   }
 
-  const getCategoryName = (categoryId: string): string => {
+  const getCategoryName = (categoryId: string | null): string => {
+    if (!categoryId) return 'Uncategorized'
     return categoryMap.get(categoryId)?.name || 'Unknown'
   }
 
