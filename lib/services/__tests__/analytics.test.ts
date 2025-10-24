@@ -141,10 +141,10 @@ describe('analyticsService', () => {
   describe('getCategoryBreakdown', () => {
     it('groups spending by category', async () => {
       const mockTransactions = [
-        { category_id: 'cat-1', amount: 100, is_income: false },
-        { category_id: 'cat-1', amount: 50, is_income: false },
-        { category_id: 'cat-2', amount: 200, is_income: false },
-        { category_id: 'cat-3', amount: 75, is_income: false },
+        { category_id: 'cat-1', amount: 100, is_income: false, category: { id: 'cat-1', name: 'Category 1', color: '#3b82f6' } },
+        { category_id: 'cat-1', amount: 50, is_income: false, category: { id: 'cat-1', name: 'Category 1', color: '#3b82f6' } },
+        { category_id: 'cat-2', amount: 200, is_income: false, category: { id: 'cat-2', name: 'Category 2', color: '#10b981' } },
+        { category_id: 'cat-3', amount: 75, is_income: false, category: { id: 'cat-3', name: 'Category 3', color: '#f59e0b' } },
       ]
 
       mockSupabaseClient.from.mockReturnValue({
@@ -163,9 +163,9 @@ describe('analyticsService', () => {
       const result = await analyticsService.getCategoryBreakdown(2024, 1)
 
       expect(result.data).toEqual({
-        'cat-1': { total: 150, count: 2, percentage: 35.29 },
-        'cat-2': { total: 200, count: 1, percentage: 47.06 },
-        'cat-3': { total: 75, count: 1, percentage: 17.65 },
+        'cat-1': { total: 150, count: 2, percentage: 35.29, name: 'Category 1', color: '#3b82f6' },
+        'cat-2': { total: 200, count: 1, percentage: 47.06, name: 'Category 2', color: '#10b981' },
+        'cat-3': { total: 75, count: 1, percentage: 17.65, name: 'Category 3', color: '#f59e0b' },
       })
     })
 
@@ -190,9 +190,9 @@ describe('analyticsService', () => {
 
     it('excludes income transactions from breakdown', async () => {
       const mockTransactions = [
-        { category_id: 'cat-1', amount: 100, is_income: false },
-        { category_id: 'cat-1', amount: 500, is_income: true }, // Should be excluded
-        { category_id: 'cat-2', amount: 200, is_income: false },
+        { category_id: 'cat-1', amount: 100, is_income: false, category: { id: 'cat-1', name: 'Category 1', color: '#3b82f6' } },
+        { category_id: 'cat-1', amount: 500, is_income: true, category: { id: 'cat-1', name: 'Category 1', color: '#3b82f6' } }, // Should be excluded
+        { category_id: 'cat-2', amount: 200, is_income: false, category: { id: 'cat-2', name: 'Category 2', color: '#10b981' } },
       ]
 
       mockSupabaseClient.from.mockReturnValue({
@@ -216,9 +216,9 @@ describe('analyticsService', () => {
 
     it('calculates correct percentages', async () => {
       const mockTransactions = [
-        { category_id: 'cat-1', amount: 500, is_income: false }, // 50%
-        { category_id: 'cat-2', amount: 300, is_income: false }, // 30%
-        { category_id: 'cat-3', amount: 200, is_income: false }, // 20%
+        { category_id: 'cat-1', amount: 500, is_income: false, category: { id: 'cat-1', name: 'Category 1', color: '#3b82f6' } }, // 50%
+        { category_id: 'cat-2', amount: 300, is_income: false, category: { id: 'cat-2', name: 'Category 2', color: '#10b981' } }, // 30%
+        { category_id: 'cat-3', amount: 200, is_income: false, category: { id: 'cat-3', name: 'Category 3', color: '#f59e0b' } }, // 20%
       ]
 
       mockSupabaseClient.from.mockReturnValue({
