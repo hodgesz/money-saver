@@ -88,10 +88,11 @@ export function CategoryChart({ year, month }: CategoryChartProps) {
   // Convert breakdown object to array sorted by total descending
   const categories = Object.entries(breakdown)
     .map(([categoryId, data]) => ({
-      name: categoryId,
+      name: data.name,
       value: data.total,
       percentage: data.percentage,
       count: data.count,
+      categoryId: categoryId,
     }))
     .sort((a, b) => b.value - a.value)
 
@@ -134,7 +135,7 @@ export function CategoryChart({ year, month }: CategoryChartProps) {
 
         <div className="mt-4 space-y-2">
           {categories.map((cat, index) => (
-            <div key={cat.name} className="flex justify-between items-center text-sm">
+            <div key={cat.categoryId} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
                 <div
                   className="w-3 h-3 rounded-full"

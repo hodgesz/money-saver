@@ -13,6 +13,8 @@ export interface CategoryBreakdownItem {
   total: number
   count: number
   percentage: number
+  name: string
+  color?: string
 }
 
 export interface CategoryBreakdown {
@@ -104,9 +106,17 @@ export const analyticsService = {
       const startDate = new Date(year, month - 1, 1).toISOString()
       const endDate = new Date(year, month, 1).toISOString()
 
+      // Fetch transactions with category details
       const { data: transactions, error } = await supabase
         .from('transactions')
-        .select('*')
+        .select(`
+          *,
+          category:categories (
+            id,
+            name,
+            color
+          )
+        `)
         .eq('is_income', false) // Only expenses
         .gte('date', startDate)
         .lt('date', endDate)
@@ -132,16 +142,21 @@ export const analyticsService = {
 
       expenses.forEach((transaction) => {
         totalExpenses += transaction.amount
+        const categoryId = transaction.category_id
+        const categoryName = transaction.category?.name || 'Uncategorized'
+        const categoryColor = transaction.category?.color || undefined
 
-        if (categoryMap.has(transaction.category_id)) {
-          const existing = categoryMap.get(transaction.category_id)!
+        if (categoryMap.has(categoryId)) {
+          const existing = categoryMap.get(categoryId)!
           existing.total += transaction.amount
           existing.count += 1
         } else {
-          categoryMap.set(transaction.category_id, {
+          categoryMap.set(categoryId, {
             total: transaction.amount,
             count: 1,
             percentage: 0,
+            name: categoryName,
+            color: categoryColor,
           })
         }
       })
@@ -153,6 +168,8 @@ export const analyticsService = {
           total: value.total,
           count: value.count,
           percentage: totalExpenses > 0 ? parseFloat(((value.total / totalExpenses) * 100).toFixed(2)) : 0,
+          name: value.name,
+          color: value.color,
         }
       })
 
