@@ -149,39 +149,52 @@ export default function TransactionImportPage() {
     const errors: string[] = []
 
     try {
-      // Helper function to find or create category by name (case-insensitive)
-      const findOrCreateCategory = async (categoryName?: string): Promise<string | null> => {
-        if (!categoryName) return null
+      // OPTIMIZATION: Pre-create all categories upfront before importing transactions
+      // Collect all unique category names from transactions
+      const uniqueCategoryNames = new Set<string>()
+      parsedTransactions.forEach((t) => {
+        if (t.category) {
+          uniqueCategoryNames.add(t.category.trim())
+        }
+      })
 
-        const normalizedName = categoryName.toLowerCase().trim()
+      // Build a map of category name (lowercase) -> category ID
+      const categoryMap = new Map<string, string>()
+      categories.forEach((cat) => {
+        categoryMap.set(cat.name.toLowerCase(), cat.id)
+      })
 
-        // First, try to find existing category
-        let match = categories.find(
-          (cat) => cat.name.toLowerCase() === normalizedName
-        )
+      // Find which categories need to be created
+      const categoriesToCreate: string[] = []
+      uniqueCategoryNames.forEach((name) => {
+        if (!categoryMap.has(name.toLowerCase())) {
+          categoriesToCreate.push(name)
+        }
+      })
 
-        // If not found, create new category
-        if (!match) {
-          const { data: newCategory, error } = await categoryService.createCategory({
-            name: categoryName.trim(),
+      // Create all missing categories in parallel
+      if (categoriesToCreate.length > 0) {
+        const createPromises = categoriesToCreate.map((name) =>
+          categoryService.createCategory({
+            name: name,
             description: `Auto-created from CSV import`,
           })
+        )
 
-          if (!error && newCategory) {
-            // Add to local categories array for future lookups in this batch
-            const newCat: Category = {
-              id: newCategory.id,
-              name: newCategory.name,
-              description: newCategory.description,
-              user_id: newCategory.user_id,
-              created_at: newCategory.created_at,
-            }
-            categories.push(newCat)
-            match = newCat
+        const results = await Promise.all(createPromises)
+
+        // Add newly created categories to the map
+        results.forEach((result, index) => {
+          if (!result.error && result.data) {
+            categoryMap.set(categoriesToCreate[index].toLowerCase(), result.data.id)
           }
-        }
+        })
+      }
 
-        return match ? match.id : null
+      // Helper function to get category ID from map (fast lookup)
+      const getCategoryId = (categoryName?: string): string | null => {
+        if (!categoryName) return null
+        return categoryMap.get(categoryName.toLowerCase().trim()) || null
       }
 
       // Batch transactions into groups of 50 for parallel processing
@@ -211,25 +224,19 @@ export default function TransactionImportPage() {
 
       // Process each batch in parallel
       for (const batch of filteredBatches) {
-        // First, resolve all category IDs for this batch
-        const categoryPromises = batch.map((transaction) =>
-          findOrCreateCategory(transaction.category)
-        )
-        const categoryIds = await Promise.all(categoryPromises)
-
-        // Then create all transactions with resolved category IDs
-        const transactionPromises = batch.map((transaction, index) =>
+        // Create all transactions in this batch with fast category ID lookups
+        const promises = batch.map((transaction) =>
           transactionService.createTransaction({
             date: transaction.date,
             amount: transaction.amount,
             merchant: transaction.merchant,
             description: transaction.description,
-            category_id: categoryIds[index],
+            category_id: getCategoryId(transaction.category),
             is_income: false,
           })
         )
 
-        const results = await Promise.all(transactionPromises)
+        const results = await Promise.all(promises)
 
         // Process results
         results.forEach((result, index) => {
