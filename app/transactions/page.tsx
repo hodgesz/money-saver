@@ -8,7 +8,9 @@ import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
 import { TransactionForm } from '@/components/features/TransactionForm'
 import { TransactionList } from '@/components/features/TransactionList'
+import { TransactionEditModal } from '@/components/features/TransactionEditModal'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import type { Transaction, Category } from '@/types'
 
 export default function TransactionsPage() {
@@ -20,6 +22,10 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const PAGE_LIMIT = 25
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -51,7 +57,7 @@ export default function TransactionsPage() {
       try {
         // Fetch transactions and categories in parallel
         const [transactionsResult, categoriesResult] = await Promise.all([
-          transactionService.getTransactions(),
+          transactionService.getTransactionsWithFilters({ page: currentPage, limit: PAGE_LIMIT }),
           categoryService.getCategories(),
         ])
 
@@ -64,11 +70,15 @@ export default function TransactionsPage() {
                        : categoriesResult.error ? 'Failed to load categories'
                        : null
 
+        // Check if there are more transactions (if we got less than PAGE_LIMIT, we're on the last page)
+        const hasMoreTransactions = newTransactions.length === PAGE_LIMIT
+
         // Single state update batch
         if (!cancelled) {
           setTransactions(newTransactions)
           setCategories(newCategories)
           setError(newError)
+          setHasMore(hasMoreTransactions)
           setLoading(false)
         }
       } catch (err) {
@@ -86,9 +96,9 @@ export default function TransactionsPage() {
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [user, currentPage])
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = currentPage) => {
     if (!isMountedRef.current) return
 
     if (isMountedRef.current) {
@@ -97,9 +107,9 @@ export default function TransactionsPage() {
     }
 
     try {
-      // Fetch transactions and categories in parallel
+      // Fetch transactions and categories in parallel with pagination
       const [transactionsResult, categoriesResult] = await Promise.all([
-        transactionService.getTransactions(),
+        transactionService.getTransactionsWithFilters({ page, limit: PAGE_LIMIT }),
         categoryService.getCategories(),
       ])
 
@@ -112,11 +122,15 @@ export default function TransactionsPage() {
                      : categoriesResult.error ? 'Failed to load categories'
                      : null
 
+      // Check if there are more transactions
+      const hasMoreTransactions = newTransactions.length === PAGE_LIMIT
+
       // Single state update batch
       if (isMountedRef.current) {
         setTransactions(newTransactions)
         setCategories(newCategories)
         setError(newError)
+        setHasMore(hasMoreTransactions)
         setLoading(false)
       }
     } catch (err) {
@@ -141,13 +155,31 @@ export default function TransactionsPage() {
       throw new Error('Failed to create transaction')
     }
 
-    // Refresh the transaction list
-    await fetchData()
+    // Reset to page 1 and refresh the transaction list
+    setCurrentPage(1)
+    await fetchData(1)
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
-    // TODO: Implement edit functionality in future iteration
-    console.log('Edit transaction:', transaction)
+    setEditingTransaction(transaction)
+  }
+
+  const handleSaveEdit = async (id: string, data: {
+    amount: number
+    date: string
+    category_id: string | null
+    description: string
+    merchant: string
+    is_income: boolean
+  }) => {
+    const result = await transactionService.updateTransaction(id, data)
+
+    if (result.error) {
+      throw new Error('Failed to update transaction')
+    }
+
+    // Refresh the current page
+    await fetchData()
   }
 
   const handleDeleteTransaction = async (id: string) => {
@@ -158,8 +190,14 @@ export default function TransactionsPage() {
       return
     }
 
-    // Refresh the transaction list
-    await fetchData()
+    // If we're on a page with only 1 transaction, go back a page
+    if (transactions.length === 1 && currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+      await fetchData(currentPage - 1)
+    } else {
+      // Refresh the current page
+      await fetchData()
+    }
   }
 
   // Show loading while checking authentication
@@ -205,10 +243,44 @@ export default function TransactionsPage() {
               isLoading={loading}
               error={error || undefined}
             />
+
+            {/* Pagination Controls */}
+            {!loading && !error && transactions.length > 0 && (
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                <Button
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  disabled={currentPage === 1}
+                  variant="secondary"
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-gray-600">
+                  Page {currentPage}
+                </span>
+                <Button
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={!hasMore}
+                  variant="secondary"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingTransaction && (
+        <TransactionEditModal
+          transaction={editingTransaction}
+          categories={categories}
+          isOpen={!!editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
     </div>
   )
 }
