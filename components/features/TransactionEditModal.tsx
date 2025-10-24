@@ -28,9 +28,19 @@ export function TransactionEditModal({
   onClose,
   onSave,
 }: TransactionEditModalProps) {
+  // Helper to format date for input (YYYY-MM-DD)
+  const formatDateForInput = (dateString: string): string => {
+    // Extract just the date part (YYYY-MM-DD) from any date format
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const [formData, setFormData] = useState({
     amount: transaction.amount.toString(),
-    date: transaction.date,
+    date: formatDateForInput(transaction.date),
     category_id: transaction.category_id || '',
     description: transaction.description,
     merchant: transaction.merchant || '',
@@ -43,7 +53,7 @@ export function TransactionEditModal({
   useEffect(() => {
     setFormData({
       amount: transaction.amount.toString(),
-      date: transaction.date,
+      date: formatDateForInput(transaction.date),
       category_id: transaction.category_id || '',
       description: transaction.description,
       merchant: transaction.merchant || '',
