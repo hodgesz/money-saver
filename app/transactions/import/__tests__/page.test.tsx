@@ -2,17 +2,19 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import TransactionImportPage from '../page'
-import { createTransaction } from '@/lib/services/transactions'
+import { transactionService } from '@/lib/services/transactions'
 
 // Mock services
 jest.mock('@/lib/services/transactions', () => ({
-  createTransaction: jest.fn(),
+  transactionService: {
+    createTransaction: jest.fn(),
+  },
 }))
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'test-user-123' } }),
 }))
 
-const mockCreateTransaction = createTransaction as jest.Mock
+const mockCreateTransaction = transactionService.createTransaction as jest.Mock
 
 describe('TransactionImportPage', () => {
   beforeEach(() => {
@@ -139,7 +141,6 @@ invalid-date,invalid-amount,Store B,Invalid`
 
       await waitFor(() => {
         expect(mockCreateTransaction).toHaveBeenCalledWith({
-          user_id: 'test-user-123',
           date: '2024-01-15',
           amount: 45.99,
           merchant: 'Whole Foods',

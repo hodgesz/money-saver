@@ -1,19 +1,28 @@
 'use client'
 
-// GREEN PHASE: Implement TransactionImport page
+// GREEN PHASE: Implement TransactionImport page with multi-format support
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
-import { createTransaction } from '@/lib/services/transactions'
+import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
+import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
+import { transactionService } from '@/lib/services/transactions'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
+
+// Extended transaction type to include category info
+interface ExtendedTransaction extends ParsedTransaction {
+  category?: string
+  subcategory?: string
+}
 
 export default function TransactionImportPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [parsedTransactions, setParsedTransactions] = useState<ParsedTransaction[]>([])
+  const [parsedTransactions, setParsedTransactions] = useState<ExtendedTransaction[]>([])
   const [parseErrors, setParseErrors] = useState<string[]>([])
+  const [detectedFormat, setDetectedFormat] = useState<CSVFormat | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [importSuccess, setImportSuccess] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
@@ -23,6 +32,7 @@ export default function TransactionImportPage() {
     if (!file) {
       setParsedTransactions([])
       setParseErrors([])
+      setDetectedFormat(null)
       return
     }
 
@@ -30,8 +40,40 @@ export default function TransactionImportPage() {
       // Read file content
       const content = await file.text()
 
-      // Parse CSV
-      const result = parseCSV(content)
+      // Detect CSV format from headers
+      const lines = content.trim().split('\n')
+      if (lines.length === 0) {
+        setParseErrors(['Empty CSV file'])
+        return
+      }
+
+      const headerLine = lines[0]
+      const headers = headerLine.split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
+      const format = detectCSVFormat(headers)
+      setDetectedFormat(format)
+
+      // Parse CSV based on detected format
+      let result: { success: boolean; transactions: any[]; errors: string[] }
+
+      if (format === CSVFormat.AMAZON) {
+        // Use Amazon parser
+        const amazonResult = parseAmazonCSV(content)
+        result = {
+          success: amazonResult.success,
+          transactions: amazonResult.transactions.map((t: AmazonTransaction) => ({
+            date: t.date,
+            amount: t.amount,
+            merchant: t.merchant,
+            description: t.description,
+            category: t.category,
+            subcategory: t.subcategory,
+          })),
+          errors: amazonResult.errors,
+        }
+      } else {
+        // Use generic parser
+        result = parseCSV(content)
+      }
 
       setParsedTransactions(result.transactions)
       setParseErrors(result.errors)
@@ -40,6 +82,7 @@ export default function TransactionImportPage() {
     } catch (error) {
       setParseErrors(['Failed to read file'])
       setParsedTransactions([])
+      setDetectedFormat(null)
     }
   }
 
@@ -55,22 +98,39 @@ export default function TransactionImportPage() {
     const errors: string[] = []
 
     try {
-      for (const transaction of parsedTransactions) {
-        const result = await createTransaction({
-          user_id: user.id,
-          date: transaction.date,
-          amount: transaction.amount,
-          merchant: transaction.merchant,
-          description: transaction.description,
-          category_id: null,
-          is_income: false,
-        })
+      // Batch transactions into groups of 50 for parallel processing
+      const BATCH_SIZE = 50
+      const batches: ExtendedTransaction[][] = []
 
-        if (result.error) {
-          errors.push(`Failed to import ${transaction.merchant}: ${result.error.message}`)
-        } else {
-          imported++
-        }
+      for (let i = 0; i < parsedTransactions.length; i += BATCH_SIZE) {
+        batches.push(parsedTransactions.slice(i, i + BATCH_SIZE))
+      }
+
+      // Process each batch in parallel
+      for (const batch of batches) {
+        const promises = batch.map((transaction) =>
+          transactionService.createTransaction({
+            date: transaction.date,
+            amount: transaction.amount,
+            merchant: transaction.merchant,
+            description: transaction.description,
+            category_id: null,
+            is_income: false,
+          })
+        )
+
+        const results = await Promise.all(promises)
+
+        // Process results
+        results.forEach((result, index) => {
+          if (result.error) {
+            errors.push(
+              `Failed to import ${batch[index].merchant}: ${result.error.message}`
+            )
+          } else {
+            imported++
+          }
+        })
 
         setImportProgress(Math.round((imported / total) * 100))
       }
@@ -105,6 +165,27 @@ export default function TransactionImportPage() {
       {/* File Upload */}
       <Card className="mb-6">
         <FileUpload onFileSelect={handleFileSelect} />
+        {detectedFormat && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center text-sm">
+              <svg
+                className="w-5 h-5 text-blue-600 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-gray-700">
+                <span className="font-medium">Detected format:</span>{' '}
+                {getFormatName(detectedFormat)}
+              </span>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Parse Errors */}
@@ -164,6 +245,9 @@ export default function TransactionImportPage() {
                   <th className="text-right py-2 px-4">Amount</th>
                   <th className="text-left py-2 px-4">Merchant</th>
                   <th className="text-left py-2 px-4">Description</th>
+                  {detectedFormat === CSVFormat.AMAZON && (
+                    <th className="text-left py-2 px-4">Category</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -177,11 +261,23 @@ export default function TransactionImportPage() {
                     <td className="py-2 px-4 text-sm text-gray-600">
                       {transaction.description}
                     </td>
+                    {detectedFormat === CSVFormat.AMAZON && (
+                      <td className="py-2 px-4 text-sm">
+                        {transaction.category && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {transaction.category}
+                          </span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
                 {parsedTransactions.length > 10 && (
                   <tr>
-                    <td colSpan={4} className="py-2 px-4 text-sm text-gray-500 text-center">
+                    <td
+                      colSpan={detectedFormat === CSVFormat.AMAZON ? 5 : 4}
+                      className="py-2 px-4 text-sm text-gray-500 text-center"
+                    >
                       ... and {parsedTransactions.length - 10} more transactions
                     </td>
                   </tr>

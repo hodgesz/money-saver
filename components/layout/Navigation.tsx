@@ -12,6 +12,7 @@ export function Navigation() {
   const links = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/transactions', label: 'Transactions' },
+    { href: '/transactions/import', label: 'Import' },
     { href: '/categories', label: 'Categories' },
     { href: '/budgets', label: 'Budgets' },
   ]
