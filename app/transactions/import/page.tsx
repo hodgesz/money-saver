@@ -9,14 +9,16 @@ import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDet
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
+import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/duplicateDetection'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
 import type { Category } from '@/types'
 
-// Extended transaction type to include category info
+// Extended transaction type to include category info and duplicate status
 interface ExtendedTransaction extends ParsedTransaction {
   category?: string
   subcategory?: string
+  duplicateCheck?: DuplicateCheckResult
 }
 
 export default function TransactionImportPage() {
@@ -30,6 +32,8 @@ export default function TransactionImportPage() {
   const [importError, setImportError] = useState<string | null>(null)
   const [importProgress, setImportProgress] = useState(0)
   const [categories, setCategories] = useState<Category[]>([])
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false)
+  const [skipDuplicates, setSkipDuplicates] = useState(true)
 
   // Load categories on mount for matching during import
   useEffect(() => {
@@ -93,10 +97,43 @@ export default function TransactionImportPage() {
       setParseErrors(result.errors)
       setImportSuccess(false)
       setImportError(null)
+
+      // Check for duplicates after parsing
+      if (result.transactions.length > 0) {
+        await checkForDuplicates(result.transactions)
+      }
     } catch (error) {
       setParseErrors(['Failed to read file'])
       setParsedTransactions([])
       setDetectedFormat(null)
+    }
+  }
+
+  const checkForDuplicates = async (transactions: ExtendedTransaction[]) => {
+    setIsCheckingDuplicates(true)
+    try {
+      // Check all transactions for duplicates
+      const duplicateResults = await duplicateDetectionService.batchCheckDuplicates(
+        transactions.map(t => ({
+          date: t.date,
+          amount: t.amount,
+          merchant: t.merchant,
+          description: t.description,
+        }))
+      )
+
+      // Add duplicate check results to transactions
+      const transactionsWithDuplicates = transactions.map((t, index) => ({
+        ...t,
+        duplicateCheck: duplicateResults[index],
+      }))
+
+      setParsedTransactions(transactionsWithDuplicates)
+    } catch (error) {
+      console.error('Error checking duplicates:', error)
+      // Continue without duplicate checking
+    } finally {
+      setIsCheckingDuplicates(false)
     }
   }
 
@@ -131,8 +168,25 @@ export default function TransactionImportPage() {
         batches.push(parsedTransactions.slice(i, i + BATCH_SIZE))
       }
 
+      // Filter out duplicates if skipDuplicates is enabled
+      let transactionsToImport = parsedTransactions
+      if (skipDuplicates) {
+        transactionsToImport = parsedTransactions.filter(
+          t => !t.duplicateCheck?.isDuplicate
+        )
+      }
+
+      // Update total count for progress calculation
+      const totalToImport = transactionsToImport.length
+
+      // Re-batch the filtered transactions
+      const filteredBatches: ExtendedTransaction[][] = []
+      for (let i = 0; i < transactionsToImport.length; i += BATCH_SIZE) {
+        filteredBatches.push(transactionsToImport.slice(i, i + BATCH_SIZE))
+      }
+
       // Process each batch in parallel
-      for (const batch of batches) {
+      for (const batch of filteredBatches) {
         const promises = batch.map((transaction) =>
           transactionService.createTransaction({
             date: transaction.date,
@@ -157,11 +211,16 @@ export default function TransactionImportPage() {
           }
         })
 
-        setImportProgress(Math.round((imported / total) * 100))
+        setImportProgress(Math.round((imported / totalToImport) * 100))
       }
 
+      const skippedCount = parsedTransactions.length - transactionsToImport.length
+
       if (errors.length > 0) {
-        setImportError(`Imported ${imported} of ${total} transactions. ${errors.length} failed.`)
+        const message = skipDuplicates
+          ? `Imported ${imported} of ${totalToImport} transactions. ${skippedCount} duplicates skipped. ${errors.length} failed.`
+          : `Imported ${imported} of ${total} transactions. ${errors.length} failed.`
+        setImportError(message)
       } else {
         setImportSuccess(true)
         setParsedTransactions([])
@@ -234,16 +293,48 @@ export default function TransactionImportPage() {
       {parsedTransactions.length > 0 && (
         <Card className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">
-              Preview ({parsedTransactions.length} transactions)
-            </h3>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                Preview ({parsedTransactions.length} transactions)
+              </h3>
+              {!isCheckingDuplicates && parsedTransactions[0]?.duplicateCheck && (
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-green-600 font-medium">
+                    {parsedTransactions.filter(t => !t.duplicateCheck?.isDuplicate).length} New
+                  </span>
+                  <span className="text-orange-600 font-medium">
+                    {parsedTransactions.filter(t => t.duplicateCheck?.isDuplicate).length} Duplicates
+                  </span>
+                </div>
+              )}
+              {isCheckingDuplicates && (
+                <span className="text-sm text-gray-500">Checking for duplicates...</span>
+              )}
+            </div>
             <Button
               onClick={handleImport}
-              disabled={isImporting || parsedTransactions.length === 0}
+              disabled={isImporting || parsedTransactions.length === 0 || isCheckingDuplicates}
             >
               {isImporting ? 'Importing...' : 'Import Transactions'}
             </Button>
           </div>
+
+          {/* Skip Duplicates Checkbox */}
+          {!isCheckingDuplicates && parsedTransactions.some(t => t.duplicateCheck?.isDuplicate) && (
+            <div className="mb-4 pb-4 border-b">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={skipDuplicates}
+                  onChange={(e) => setSkipDuplicates(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Skip duplicate transactions (recommended)
+                </span>
+              </label>
+            </div>
+          )}
 
           {/* Progress Bar */}
           {isImporting && (
@@ -266,6 +357,7 @@ export default function TransactionImportPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
+                  <th className="text-left py-2 px-4">Status</th>
                   <th className="text-left py-2 px-4">Date</th>
                   <th className="text-right py-2 px-4">Amount</th>
                   <th className="text-left py-2 px-4">Merchant</th>
@@ -276,31 +368,51 @@ export default function TransactionImportPage() {
                 </tr>
               </thead>
               <tbody>
-                {parsedTransactions.slice(0, 10).map((transaction, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-2 px-4 text-sm">{transaction.date}</td>
-                    <td className="py-2 px-4 text-sm text-right">
-                      ${transaction.amount.toFixed(2)}
-                    </td>
-                    <td className="py-2 px-4 text-sm">{transaction.merchant}</td>
-                    <td className="py-2 px-4 text-sm text-gray-600">
-                      {transaction.description}
-                    </td>
-                    {detectedFormat === CSVFormat.AMAZON && (
+                {parsedTransactions.slice(0, 10).map((transaction, index) => {
+                  const isDuplicate = transaction.duplicateCheck?.isDuplicate
+                  const rowClass = isDuplicate
+                    ? "border-b bg-orange-50 hover:bg-orange-100"
+                    : "border-b hover:bg-gray-50"
+
+                  return (
+                    <tr key={index} className={rowClass}>
                       <td className="py-2 px-4 text-sm">
-                        {transaction.category && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {transaction.category}
+                        {isCheckingDuplicates ? (
+                          <span className="text-gray-400">Checking...</span>
+                        ) : isDuplicate ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            Duplicate
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            New
                           </span>
                         )}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="py-2 px-4 text-sm">{transaction.date}</td>
+                      <td className="py-2 px-4 text-sm text-right">
+                        ${transaction.amount.toFixed(2)}
+                      </td>
+                      <td className="py-2 px-4 text-sm">{transaction.merchant}</td>
+                      <td className="py-2 px-4 text-sm text-gray-600">
+                        {transaction.description}
+                      </td>
+                      {detectedFormat === CSVFormat.AMAZON && (
+                        <td className="py-2 px-4 text-sm">
+                          {transaction.category && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {transaction.category}
+                            </span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
                 {parsedTransactions.length > 10 && (
                   <tr>
                     <td
-                      colSpan={detectedFormat === CSVFormat.AMAZON ? 5 : 4}
+                      colSpan={detectedFormat === CSVFormat.AMAZON ? 6 : 5}
                       className="py-2 px-4 text-sm text-gray-500 text-center"
                     >
                       ... and {parsedTransactions.length - 10} more transactions
