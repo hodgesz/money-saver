@@ -5,7 +5,7 @@ export interface Transaction {
   user_id: string
   amount: number
   date: string
-  category_id: string
+  category_id: string | null
   description: string
   merchant?: string
   account_id?: string | null
@@ -57,7 +57,7 @@ export interface ApiResponse<T> {
 export interface TransactionFormData {
   amount: number
   date: string
-  category_id: string
+  category_id?: string | null
   description: string
   merchant?: string
   is_income: boolean

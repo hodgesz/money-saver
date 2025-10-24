@@ -110,7 +110,7 @@ export function RecentTransactionsList() {
       <CardContent>
         <div className="space-y-3">
           {transactions.map((transaction) => {
-            const category = categories.get(transaction.category_id)
+            const category = transaction.category_id ? categories.get(transaction.category_id) : undefined
             const date = new Date(transaction.date)
             const formattedDate = date.toLocaleDateString('en-US', {
               month: 'short',
