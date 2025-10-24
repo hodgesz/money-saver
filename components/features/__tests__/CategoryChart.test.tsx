@@ -38,9 +38,9 @@ describe('CategoryChart', () => {
 
   it('displays chart when data is loaded', async () => {
     const mockData = {
-      'cat-1': { total: 500, count: 10, percentage: 50 },
-      'cat-2': { total: 300, count: 5, percentage: 30 },
-      'cat-3': { total: 200, count: 3, percentage: 20 },
+      'cat-1': { total: 500, count: 10, percentage: 50, name: 'Category 1' },
+      'cat-2': { total: 300, count: 5, percentage: 30, name: 'Category 2' },
+      'cat-3': { total: 200, count: 3, percentage: 20, name: 'Category 3' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -84,9 +84,9 @@ describe('CategoryChart', () => {
 
   it('renders correct number of categories', async () => {
     const mockData = {
-      'cat-1': { total: 100, count: 2, percentage: 33.33 },
-      'cat-2': { total: 100, count: 2, percentage: 33.33 },
-      'cat-3': { total: 100, count: 2, percentage: 33.34 },
+      'cat-1': { total: 100, count: 2, percentage: 33.33, name: 'Category 1' },
+      'cat-2': { total: 100, count: 2, percentage: 33.33, name: 'Category 2' },
+      'cat-3': { total: 100, count: 2, percentage: 33.34, name: 'Category 3' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -104,8 +104,8 @@ describe('CategoryChart', () => {
 
   it('displays category names and amounts', async () => {
     const mockData = {
-      'Groceries': { total: 500, count: 10, percentage: 50 },
-      'Transport': { total: 300, count: 5, percentage: 30 },
+      'cat-groceries': { total: 500, count: 10, percentage: 50, name: 'Groceries' },
+      'cat-transport': { total: 300, count: 5, percentage: 30, name: 'Transport' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -165,7 +165,7 @@ describe('CategoryChart', () => {
 
   it('formats large amounts correctly', async () => {
     const mockData = {
-      'Category': { total: 12345.67, count: 100, percentage: 100 },
+      'cat-large': { total: 12345.67, count: 100, percentage: 100, name: 'Category' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -184,9 +184,9 @@ describe('CategoryChart', () => {
 
   it('sorts categories by total amount descending', async () => {
     const mockData = {
-      'Small': { total: 100, count: 5, percentage: 10 },
-      'Large': { total: 800, count: 20, percentage: 80 },
-      'Medium': { total: 100, count: 5, percentage: 10 },
+      'cat-small': { total: 100, count: 5, percentage: 10, name: 'Small' },
+      'cat-large': { total: 800, count: 20, percentage: 80, name: 'Large' },
+      'cat-medium': { total: 100, count: 5, percentage: 10, name: 'Medium' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
@@ -206,7 +206,7 @@ describe('CategoryChart', () => {
 
   it('has proper accessibility attributes', async () => {
     const mockData = {
-      'Category': { total: 100, count: 5, percentage: 100 },
+      'cat-test': { total: 100, count: 5, percentage: 100, name: 'Category' },
     }
 
     ;(analyticsService.getCategoryBreakdown as jest.Mock).mockResolvedValue({
