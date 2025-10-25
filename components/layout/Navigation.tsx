@@ -15,6 +15,7 @@ export function Navigation() {
     { href: '/transactions/import', label: 'Import' },
     { href: '/categories', label: 'Categories' },
     { href: '/budgets', label: 'Budgets' },
+    { href: '/profile', label: 'Profile' },
   ]
 
   const isActive = (href: string) => pathname === href

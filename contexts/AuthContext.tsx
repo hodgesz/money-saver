@@ -20,6 +20,8 @@ interface AuthContextType {
   signOut: () => Promise<VoidAuthResult>
   resetPassword: (email: string) => Promise<VoidAuthResult>
   updatePassword: (newPassword: string) => Promise<AuthResult>
+  updateProfile: (updates: { name?: string }) => Promise<AuthResult>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -117,7 +119,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function updatePassword(newPassword: string): Promise<AuthResult> {
-    return await authService.updatePassword(newPassword)
+    const result = await authService.updatePassword(newPassword)
+    if (!result.error && result.data?.user) {
+      setUser(result.data.user)
+    }
+    return result
+  }
+
+  async function updateProfile(updates: { name?: string }): Promise<AuthResult> {
+    const result = await authService.updateProfile(updates)
+    if (!result.error && result.data?.user) {
+      setUser(result.data.user)
+    }
+    return result
+  }
+
+  async function refreshUser(): Promise<void> {
+    const { data } = await authService.getCurrentUser()
+    if (data?.user) {
+      setUser(data.user)
+    }
   }
 
   const value: AuthContextType = {
@@ -128,6 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     resetPassword,
     updatePassword,
+    updateProfile,
+    refreshUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
