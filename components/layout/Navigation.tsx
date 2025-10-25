@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
+import { AlertDisplay } from '@/components/features/AlertDisplay'
 
 export function Navigation() {
   const pathname = usePathname()
@@ -52,10 +53,13 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Sign Out Button */}
-          <Button onClick={handleSignOut} variant="ghost" size="sm">
-            Sign Out
-          </Button>
+          {/* Alert Notifications & Sign Out */}
+          <div className="flex items-center gap-4">
+            <AlertDisplay />
+            <Button onClick={handleSignOut} variant="ghost" size="sm">
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
     </nav>
