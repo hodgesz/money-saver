@@ -1,13 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import ResetPasswordPage from '../page'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
-  useSearchParams: jest.fn(),
 }))
 
 // Mock AuthContext
@@ -18,16 +17,12 @@ jest.mock('@/contexts/AuthContext', () => ({
 describe('ResetPasswordPage', () => {
   const mockPush = jest.fn()
   const mockUpdatePassword = jest.fn()
-  const mockSearchParams = {
-    get: jest.fn(),
-  }
 
   beforeEach(() => {
     jest.clearAllMocks()
     ;(useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     })
-    ;(useSearchParams as jest.Mock).mockReturnValue(mockSearchParams)
     ;(useAuth as jest.Mock).mockReturnValue({
       updatePassword: mockUpdatePassword,
     })

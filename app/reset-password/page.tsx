@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -39,7 +39,6 @@ export default function ResetPasswordPage() {
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>('weak')
   const { updatePassword } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     setPasswordStrength(calculatePasswordStrength(newPassword))
