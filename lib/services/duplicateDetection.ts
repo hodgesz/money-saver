@@ -72,11 +72,18 @@ export const duplicateDetectionService = {
     const normalizedDesc = transaction.description.toLowerCase().trim()
 
     for (const existing of existingTransactions) {
-      // Check date match (exact)
-      if (existing.date !== transaction.date) continue
+      // Check date match - extract just the date part from timestamp
+      // existing.date is a timestamptz like "2024-12-25 00:00:00+00"
+      // transaction.date is a string like "2024-12-25"
+      const existingDate = existing.date.split('T')[0].split(' ')[0]
+      if (existingDate !== transaction.date) continue
 
       // Check amount match (to 2 decimal places)
-      if (Math.abs(existing.amount - transaction.amount) > 0.01) continue
+      // Convert existing.amount to number if it's a string
+      const existingAmount = typeof existing.amount === 'string'
+        ? parseFloat(existing.amount)
+        : existing.amount
+      if (Math.abs(existingAmount - transaction.amount) > 0.01) continue
 
       // Check merchant match (case-insensitive)
       const existingMerchant = (existing.merchant || '').toLowerCase().trim()
@@ -133,25 +140,49 @@ export const duplicateDetectionService = {
 
     const supabase = createClient()
 
-    // Get unique dates from transactions
-    const dates = [...new Set(transactions.map(t => t.date))]
+    // Get unique dates from transactions and sort them
+    const dates = [...new Set(transactions.map(t => t.date))].sort()
+    const earliestDate = dates[0]
+    const latestDate = dates[dates.length - 1]
 
-    // Fetch all transactions for these dates
+    console.log('[DuplicateDetection] Checking', transactions.length, 'transactions')
+    console.log('[DuplicateDetection] Date range:', earliestDate, 'to', latestDate)
+
+    // Fetch all transactions for this date range
+    // The date column is timestamptz, so we need to use full timestamp strings
     const { data: existingTransactions, error } = await supabase
       .from('transactions')
       .select('*')
-      .in('date', dates)
+      .gte('date', earliestDate + 'T00:00:00.000Z')
+      .lte('date', latestDate + 'T23:59:59.999Z')
       .order('date', { ascending: false })
 
-    if (error || !existingTransactions) {
+    console.log('[DuplicateDetection] Query result:', {
+      count: existingTransactions?.length || 0,
+      error: error?.message,
+      sample: existingTransactions?.slice(0, 2)
+    })
+
+    if (error) {
+      console.error('[DuplicateDetection] Error querying transactions:', error)
       // If error, mark all as not duplicates
       return transactions.map(() => ({ isDuplicate: false, confidence: 0 }))
     }
 
+    if (!existingTransactions || existingTransactions.length === 0) {
+      console.log('[DuplicateDetection] No existing transactions found')
+      return transactions.map(() => ({ isDuplicate: false, confidence: 0 }))
+    }
+
     // Check each transaction against the existing ones
-    return transactions.map(transaction =>
+    const results = transactions.map(transaction =>
       this.checkAgainstList(transaction, existingTransactions)
     )
+
+    const duplicateCount = results.filter(r => r.isDuplicate).length
+    console.log('[DuplicateDetection] Found', duplicateCount, 'duplicates out of', transactions.length)
+
+    return results
   },
 
   /**

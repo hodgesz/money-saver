@@ -13,6 +13,11 @@ jest.mock('@/lib/supabase/client', () => ({
         in: jest.fn(() => ({
           order: jest.fn(() => Promise.resolve({ data: [], error: null })),
         })),
+        gte: jest.fn(() => ({
+          lte: jest.fn(() => ({
+            order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+          })),
+        })),
       })),
     })),
   })),
@@ -24,7 +29,7 @@ describe('duplicateDetectionService', () => {
       {
         id: '1',
         user_id: 'user-1',
-        date: '2025-01-15',
+        date: '2025-01-15 00:00:00+00', // Simulate database timestamptz format
         amount: 45.99,
         merchant: 'Amazon',
         description: 'Books',
@@ -38,7 +43,7 @@ describe('duplicateDetectionService', () => {
       {
         id: '2',
         user_id: 'user-1',
-        date: '2025-01-15',
+        date: '2025-01-15 00:00:00+00', // Simulate database timestamptz format
         amount: 100.00,
         merchant: 'Target',
         description: 'Groceries',
@@ -271,7 +276,7 @@ describe('duplicateDetectionService', () => {
         {
           id: '1',
           user_id: 'user-1',
-          date: '2025-01-15',
+          date: '2025-01-15 00:00:00+00', // Simulate database timestamptz format
           amount: 45.99,
           merchant: 'Amazon',
           description: 'Books',
@@ -352,8 +357,10 @@ describe('duplicateDetectionService', () => {
       createClient.mockReturnValueOnce({
         from: () => ({
           select: () => ({
-            in: () => ({
-              order: () => Promise.resolve({ data: null, error: { message: 'DB error' } }),
+            gte: () => ({
+              lte: () => ({
+                order: () => Promise.resolve({ data: null, error: { message: 'DB error' } }),
+              }),
             }),
           }),
         }),
