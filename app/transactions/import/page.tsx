@@ -1,7 +1,7 @@
 'use client'
 
 // GREEN PHASE: Implement TransactionImport page with multi-format support
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
@@ -34,6 +34,7 @@ export default function TransactionImportPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false)
   const [skipDuplicates, setSkipDuplicates] = useState(true)
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load categories on mount for matching during import
   useEffect(() => {
@@ -44,6 +45,15 @@ export default function TransactionImportPage() {
       }
     }
     loadCategories()
+  }, [])
+
+  // Cleanup redirect timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current)
+      }
+    }
   }, [])
 
   const handleFileSelect = async (file: File | null) => {
@@ -177,7 +187,6 @@ export default function TransactionImportPage() {
         const createPromises = categoriesToCreate.map((name) =>
           categoryService.createCategory({
             name: name,
-            description: `Auto-created from CSV import`,
           })
         )
 
@@ -265,7 +274,11 @@ export default function TransactionImportPage() {
         setParseErrors([])
 
         // Redirect to transactions page after successful import
-        setTimeout(() => {
+        // Clear any existing timeout first
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current)
+        }
+        redirectTimeoutRef.current = setTimeout(() => {
           router.push('/transactions')
         }, 2000)
       }

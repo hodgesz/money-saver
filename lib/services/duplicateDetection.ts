@@ -105,7 +105,9 @@ export const duplicateDetectionService = {
       }
 
       // If description matches but merchant differs, it might be a duplicate
-      if (descMatch) {
+      // BUT: only if both merchants have values (not null/empty)
+      // This prevents false positives when merchant data is missing
+      if (descMatch && existingMerchant && normalizedMerchant) {
         return {
           isDuplicate: true,
           matchedTransaction: existing,
