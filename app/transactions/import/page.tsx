@@ -7,6 +7,7 @@ import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
 import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
+import { parseChaseCSV, ChaseTransaction } from '@/lib/utils/parsers/chaseParser'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
 import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/duplicateDetection'
@@ -97,6 +98,20 @@ export default function TransactionImportPage() {
             subcategory: t.subcategory,
           })),
           errors: amazonResult.errors,
+        }
+      } else if (format === CSVFormat.CHASE_CREDIT_CARD) {
+        // Use Chase parser
+        const chaseResult = parseChaseCSV(content)
+        result = {
+          success: chaseResult.success,
+          transactions: chaseResult.transactions.map((t: ChaseTransaction) => ({
+            date: t.date,
+            amount: t.amount,
+            merchant: t.merchant,
+            description: t.description,
+            category: t.chaseCategory, // Map Chase category to our category field
+          })),
+          errors: chaseResult.errors,
         }
       } else {
         // Use generic parser

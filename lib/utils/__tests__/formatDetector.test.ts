@@ -55,12 +55,12 @@ describe('detectCSVFormat', () => {
   })
 
   describe('Credit card format detection', () => {
-    it('detects credit card statement format', () => {
+    it('detects Chase credit card format', () => {
       const headers = ['transaction date', 'post date', 'description', 'category', 'amount']
 
       const result = detectCSVFormat(headers)
 
-      expect(result).toBe(CSVFormat.CREDIT_CARD)
+      expect(result).toBe(CSVFormat.CHASE_CREDIT_CARD)
     })
 
     it('detects credit card with merchant column', () => {

@@ -2,6 +2,7 @@
 
 export enum CSVFormat {
   AMAZON = 'amazon',
+  CHASE_CREDIT_CARD = 'chase_credit_card',
   BANK_STATEMENT = 'bank_statement',
   CREDIT_CARD = 'credit_card',
   GENERIC = 'generic',
@@ -18,6 +19,12 @@ const FORMAT_SIGNATURES: Record<CSVFormat, FormatSignature> = {
     // Amazon is identified by having ASIN or "order" keywords
     requiredColumns: ['asin|order'],
     optionalColumns: ['price', 'description', 'category', 'quantity', 'item'],
+    priority: 1,
+  },
+  [CSVFormat.CHASE_CREDIT_CARD]: {
+    // Chase credit cards have specific column structure
+    requiredColumns: ['transaction date', 'post date', 'description'],
+    optionalColumns: ['amount', 'category', 'type', 'memo'],
     priority: 1,
   },
   [CSVFormat.BANK_STATEMENT]: {
@@ -140,6 +147,8 @@ export function getFormatName(format: CSVFormat): string {
   switch (format) {
     case CSVFormat.AMAZON:
       return 'Amazon Order History'
+    case CSVFormat.CHASE_CREDIT_CARD:
+      return 'Chase Credit Card'
     case CSVFormat.BANK_STATEMENT:
       return 'Bank Statement'
     case CSVFormat.CREDIT_CARD:
