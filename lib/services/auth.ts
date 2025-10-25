@@ -120,6 +120,18 @@ class AuthService {
 
     return { data, error }
   }
+
+  /**
+   * Update user profile metadata (name, etc.)
+   */
+  async updateProfile(updates: { name?: string }): Promise<AuthResult> {
+    const supabase = createClient()
+    const { data, error } = await supabase.auth.updateUser({
+      data: updates,
+    })
+
+    return { data, error }
+  }
 }
 
 // Export a singleton instance

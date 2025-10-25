@@ -30,11 +30,15 @@ export function TransactionEditModal({
 }: TransactionEditModalProps) {
   // Helper to format date for input (YYYY-MM-DD)
   const formatDateForInput = (dateString: string): string => {
-    // Extract just the date part (YYYY-MM-DD) from any date format
+    // If already in YYYY-MM-DD format, return as-is to avoid timezone issues
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString
+    }
+    // Otherwise parse and format
     const date = new Date(dateString)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
 
@@ -119,7 +123,14 @@ export function TransactionEditModal({
                 Edit Transaction
               </h3>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+                {/* Error Message */}
+                {error && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+                    {error}
+                  </div>
+                )}
+
                 {/* Amount */}
                 <div>
                   <Label htmlFor="edit-amount">Amount</Label>
@@ -129,7 +140,6 @@ export function TransactionEditModal({
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    required
                   />
                 </div>
 
@@ -199,12 +209,6 @@ export function TransactionEditModal({
                     This is income
                   </Label>
                 </div>
-
-                {error && (
-                  <div className="rounded-md bg-red-50 p-4">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
 
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
                   <Button
