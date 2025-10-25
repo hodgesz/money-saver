@@ -431,6 +431,7 @@ describe('TransactionEditModal', () => {
 
   describe('Form Validation', () => {
     it('shows error for empty amount', async () => {
+      const user = userEvent.setup()
       const onSave = jest.fn()
 
       render(
@@ -444,10 +445,11 @@ describe('TransactionEditModal', () => {
       )
 
       const amountInput = screen.getByLabelText(/amount/i)
-      fireEvent.change(amountInput, { target: { value: '' } })
+      await user.clear(amountInput)
+      await user.type(amountInput, '0') // Type 0 first
+      await user.clear(amountInput) // Then clear to get empty string
 
-      const saveButton = screen.getByRole('button', { name: /save changes/i })
-      fireEvent.click(saveButton)
+      await user.click(screen.getByRole('button', { name: /save changes/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/please enter a valid amount/i)).toBeInTheDocument()
