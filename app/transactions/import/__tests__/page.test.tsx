@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import TransactionImportPage from '../page'
 import { transactionService } from '@/lib/services/transactions'
+import { categoryService } from '@/lib/services/categories'
+import { duplicateDetectionService } from '@/lib/services/duplicateDetection'
 
 // Mock services
 jest.mock('@/lib/services/transactions', () => ({
@@ -10,11 +12,25 @@ jest.mock('@/lib/services/transactions', () => ({
     createTransaction: jest.fn(),
   },
 }))
+jest.mock('@/lib/services/categories', () => ({
+  categoryService: {
+    getCategories: jest.fn(),
+    createCategory: jest.fn(),
+  },
+}))
+jest.mock('@/lib/services/duplicateDetection', () => ({
+  duplicateDetectionService: {
+    batchCheckDuplicates: jest.fn(),
+  },
+}))
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'test-user-123' } }),
 }))
 
 const mockCreateTransaction = transactionService.createTransaction as jest.Mock
+const mockGetCategories = categoryService.getCategories as jest.Mock
+const mockCreateCategory = categoryService.createCategory as jest.Mock
+const mockBatchCheckDuplicates = duplicateDetectionService.batchCheckDuplicates as jest.Mock
 
 describe('TransactionImportPage', () => {
   beforeEach(() => {
@@ -24,6 +40,21 @@ describe('TransactionImportPage', () => {
       data: { id: '1', date: '2024-01-15', amount: 45.99, merchant: 'Store', description: 'Test', category_id: null, user_id: 'test-user-123', is_income: false, created_at: '2024-01-01', updated_at: '2024-01-01', receipt_url: null, account_id: null },
       error: null,
     })
+
+    mockGetCategories.mockResolvedValue({
+      data: [],
+      error: null,
+    })
+
+    mockCreateCategory.mockResolvedValue({
+      data: { id: 'cat-1', name: 'Test Category', user_id: 'test-user-123', created_at: '2024-01-01', updated_at: '2024-01-01' },
+      error: null,
+    })
+
+    // Mock duplicate detection to return no duplicates by default
+    mockBatchCheckDuplicates.mockResolvedValue([
+      { isDuplicate: false, confidence: 0, matchedTransactionId: null },
+    ])
   })
 
   describe('rendering', () => {
