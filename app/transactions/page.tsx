@@ -6,26 +6,36 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Navigation } from '@/components/layout/Navigation'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
+import { transactionLinkingService } from '@/lib/services/transactionLinking'
 import { TransactionForm } from '@/components/features/TransactionForm'
 import { TransactionList } from '@/components/features/TransactionList'
 import { TransactionEditModal } from '@/components/features/TransactionEditModal'
+import { TransactionLinkingModal } from '@/components/features/TransactionLinkingModal'
+import { LinkSuggestionsPanel } from '@/components/features/LinkSuggestionsPanel'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { Transaction, Category } from '@/types'
+import type { LinkedTransaction, LinkSuggestion } from '@/lib/types/transactionLinking'
 
 export default function TransactionsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const isMountedRef = useRef(false)
 
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [transactions, setTransactions] = useState<LinkedTransaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const PAGE_LIMIT = 25
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [editingTransaction, setEditingTransaction] = useState<LinkedTransaction | null>(null)
+
+  // Linking state
+  const [linkingTransaction, setLinkingTransaction] = useState<LinkedTransaction | null>(null)
+  const [candidateTransactions, setCandidateTransactions] = useState<LinkedTransaction[]>([])
+  const [linkSuggestions, setLinkSuggestions] = useState<LinkSuggestion[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -160,7 +170,7 @@ export default function TransactionsPage() {
     await fetchData(1)
   }
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = (transaction: LinkedTransaction) => {
     setEditingTransaction(transaction)
   }
 
@@ -200,6 +210,94 @@ export default function TransactionsPage() {
     }
   }
 
+  // Linking functionality
+  const handleLinkTransaction = async (transaction: LinkedTransaction) => {
+    setLinkingTransaction(transaction)
+
+    // Fetch candidate transactions (within ±7 days)
+    const candidates = await transactionLinkingService.findCandidateTransactions(transaction)
+    setCandidateTransactions(candidates)
+  }
+
+  const handleCreateLinks = async (parentId: string, childIds: string[]) => {
+    const result = await transactionLinkingService.createLink({
+      parentTransactionId: parentId,
+      childTransactionIds: childIds,
+      linkType: 'manual',
+    })
+
+    if (!result.success) {
+      setError('Failed to create links')
+      return
+    }
+
+    // Close modal and refresh data
+    setLinkingTransaction(null)
+    setCandidateTransactions([])
+    await fetchData()
+    await fetchLinkSuggestions()
+  }
+
+  const handleUnlinkTransaction = async (id: string) => {
+    const result = await transactionLinkingService.removeLink(id)
+
+    if (!result.success) {
+      setError('Failed to unlink transaction')
+      return
+    }
+
+    // Refresh data
+    await fetchData()
+  }
+
+  const fetchLinkSuggestions = async () => {
+    if (!user) return
+
+    setSuggestionsLoading(true)
+
+    try {
+      const suggestions = await transactionLinkingService.getLinkSuggestions(user.id)
+      setLinkSuggestions(suggestions)
+    } catch (err) {
+      console.error('Failed to fetch link suggestions:', err)
+    } finally {
+      setSuggestionsLoading(false)
+    }
+  }
+
+  const handleAcceptSuggestion = async (suggestion: LinkSuggestion) => {
+    const childIds = suggestion.childTransactions.map(t => t.id)
+    const result = await transactionLinkingService.createLink({
+      parentTransactionId: suggestion.parentTransaction.id,
+      childTransactionIds: childIds,
+      linkType: 'auto',
+      confidence: suggestion.confidence,
+    })
+
+    if (!result.success) {
+      setError('Failed to accept suggestion')
+      return
+    }
+
+    // Refresh data and suggestions
+    await fetchData()
+    await fetchLinkSuggestions()
+  }
+
+  const handleRejectSuggestion = async (suggestion: LinkSuggestion) => {
+    // Just remove from UI for now (could add reject tracking in future)
+    setLinkSuggestions(prev =>
+      prev.filter(s => s.parentTransaction.id !== suggestion.parentTransaction.id)
+    )
+  }
+
+  // Fetch suggestions on mount
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchLinkSuggestions()
+    }
+  }, [user, authLoading])
+
   // Show loading while checking authentication
   if (authLoading || !user) {
     return (
@@ -214,6 +312,20 @@ export default function TransactionsPage() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Transactions</h1>
+
+        {/* Link Suggestions Panel */}
+        {linkSuggestions.length > 0 && (
+          <div className="mb-8">
+            <LinkSuggestionsPanel
+              suggestions={linkSuggestions}
+              categories={categories}
+              isLoading={suggestionsLoading}
+              onAccept={handleAcceptSuggestion}
+              onReject={handleRejectSuggestion}
+              onRefresh={fetchLinkSuggestions}
+            />
+          </div>
+        )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Transaction Form - Left side on large screens */}
@@ -240,6 +352,8 @@ export default function TransactionsPage() {
               categories={categories}
               onEdit={handleEditTransaction}
               onDelete={handleDeleteTransaction}
+              onLink={handleLinkTransaction}
+              onUnlink={handleUnlinkTransaction}
               isLoading={loading}
               error={error || undefined}
             />
@@ -279,6 +393,21 @@ export default function TransactionsPage() {
           isOpen={!!editingTransaction}
           onClose={() => setEditingTransaction(null)}
           onSave={handleSaveEdit}
+        />
+      )}
+
+      {/* Linking Modal */}
+      {linkingTransaction && (
+        <TransactionLinkingModal
+          parentTransaction={linkingTransaction}
+          candidateTransactions={candidateTransactions}
+          categories={categories}
+          isOpen={!!linkingTransaction}
+          onClose={() => {
+            setLinkingTransaction(null)
+            setCandidateTransactions([])
+          }}
+          onLink={handleCreateLinks}
         />
       )}
     </div>

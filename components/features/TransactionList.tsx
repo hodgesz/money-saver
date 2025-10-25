@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useMemo, ChangeEvent } from 'react'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import type { Transaction, Category } from '@/types'
+import { LinkedTransactionRow } from './LinkedTransactionRow'
+import type { LinkedTransaction } from '@/lib/types/transactionLinking'
+import type { Category } from '@/types'
 
 interface TransactionListProps {
-  transactions: Transaction[]
+  transactions: LinkedTransaction[]
   categories: Category[]
-  onEdit: (transaction: Transaction) => void
+  onEdit: (transaction: LinkedTransaction) => void
   onDelete: (id: string) => void
+  onLink: (transaction: LinkedTransaction) => void
+  onUnlink: (id: string) => void
   isLoading?: boolean
   error?: string
 }
@@ -22,6 +25,8 @@ export function TransactionList({
   categories,
   onEdit,
   onDelete,
+  onLink,
+  onUnlink,
   isLoading = false,
   error,
 }: TransactionListProps) {
@@ -38,12 +43,32 @@ export function TransactionList({
     return map
   }, [categories])
 
-  // Filter and sort transactions (client-side)
+  // Build transaction hierarchy (group children with parents)
+  const { parentTransactions, childrenMap } = useMemo(() => {
+    const parents: LinkedTransaction[] = []
+    const childMap = new Map<string, LinkedTransaction[]>()
+
+    transactions.forEach((transaction) => {
+      if (transaction.parent_transaction_id) {
+        // This is a child transaction
+        const siblings = childMap.get(transaction.parent_transaction_id) || []
+        siblings.push(transaction)
+        childMap.set(transaction.parent_transaction_id, siblings)
+      } else {
+        // This is a parent or standalone transaction
+        parents.push(transaction)
+      }
+    })
+
+    return { parentTransactions: parents, childrenMap: childMap }
+  }, [transactions])
+
+  // Filter and sort parent transactions (client-side)
   // NOTE: These filters only apply to transactions on the current page.
   // For server-side filtering across all transactions, the parent component
   // should pass categoryId/search to the backend query.
   const filteredAndSortedTransactions = useMemo(() => {
-    let result = [...transactions]
+    let result = [...parentTransactions]
 
     // Apply category filter
     if (selectedCategoryId) {
@@ -78,7 +103,7 @@ export function TransactionList({
     })
 
     return result
-  }, [transactions, sortBy, searchTerm, selectedCategoryId])
+  }, [parentTransactions, sortBy, searchTerm, selectedCategoryId])
 
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value as SortField)
@@ -92,26 +117,6 @@ export function TransactionList({
     setSelectedCategoryId(e.target.value)
   }
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date)
-  }
-
-  const getCategoryName = (categoryId: string | null): string => {
-    if (!categoryId) return 'Uncategorized'
-    return categoryMap.get(categoryId)?.name || 'Unknown'
-  }
 
   // Loading state
   if (isLoading) {
@@ -276,63 +281,16 @@ export function TransactionList({
           </thead>
           <tbody>
             {filteredAndSortedTransactions.map((transaction) => (
-              <tr
+              <LinkedTransactionRow
                 key={transaction.id}
-                data-testid="transaction-item"
-                data-is-income={transaction.is_income}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-              >
-                <td className="p-4 text-gray-700">
-                  {formatDate(transaction.date)}
-                </td>
-                <td className="p-4">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-900">
-                      {transaction.description}
-                    </span>
-                    {transaction.merchant && (
-                      <span className="text-sm text-gray-600">
-                        {transaction.merchant}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {getCategoryName(transaction.category_id)}
-                  </span>
-                </td>
-                <td className="p-4 text-right">
-                  <span
-                    className={`font-semibold ${
-                      transaction.is_income ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </td>
-                <td className="p-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(transaction)}
-                      aria-label={`Edit ${transaction.description}`}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(transaction.id)}
-                      aria-label={`Delete ${transaction.description}`}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+                transaction={transaction}
+                childTransactions={childrenMap.get(transaction.id) || []}
+                categories={categories}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onLink={onLink}
+                onUnlink={onUnlink}
+              />
             ))}
           </tbody>
         </table>
