@@ -284,7 +284,7 @@ export function TransactionList({
               <LinkedTransactionRow
                 key={transaction.id}
                 transaction={transaction}
-                children={childrenMap.get(transaction.id) || []}
+                childTransactions={childrenMap.get(transaction.id) || []}
                 categories={categories}
                 onEdit={onEdit}
                 onDelete={onDelete}

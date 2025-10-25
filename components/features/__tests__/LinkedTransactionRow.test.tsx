@@ -131,7 +131,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
@@ -175,7 +175,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
@@ -197,7 +197,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
@@ -223,7 +223,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
@@ -422,7 +422,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
@@ -443,7 +443,7 @@ describe('LinkedTransactionRow', () => {
           <tbody>
             <LinkedTransactionRow
               transaction={mockParentTransaction}
-              children={mockChildTransactions}
+              childTransactions={mockChildTransactions}
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}

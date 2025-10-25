@@ -8,7 +8,7 @@ import { getConfidenceLevel } from '@/lib/types/transactionLinking'
 
 interface LinkedTransactionRowProps {
   transaction: LinkedTransaction
-  children?: LinkedTransaction[]
+  childTransactions?: LinkedTransaction[]
   categories: Category[]
   onEdit: (transaction: LinkedTransaction) => void
   onDelete: (id: string) => void
@@ -19,7 +19,7 @@ interface LinkedTransactionRowProps {
 
 export function LinkedTransactionRow({
   transaction,
-  children = [],
+  childTransactions = [],
   categories,
   onEdit,
   onDelete,
@@ -77,7 +77,7 @@ export function LinkedTransactionRow({
     )
   }
 
-  const hasChildren = children.length > 0
+  const hasChildren = childTransactions.length > 0
   const isParent = hasChildren && !isChild
 
   return (
@@ -125,7 +125,7 @@ export function LinkedTransactionRow({
             )}
             {isParent && (
               <span className="text-xs text-blue-600 mt-1">
-                {children.length} linked items
+                {childTransactions.length} linked items
               </span>
             )}
             {isChild && getConfidenceBadge()}
@@ -197,7 +197,7 @@ export function LinkedTransactionRow({
       </tr>
 
       {/* Child Rows (when expanded) */}
-      {isParent && isExpanded && children.map((child) => (
+      {isParent && isExpanded && childTransactions.map((child) => (
         <LinkedTransactionRow
           key={child.id}
           transaction={child}
