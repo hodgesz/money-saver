@@ -534,7 +534,9 @@ describe('ProfilePage', () => {
       await user.click(screen.getByRole('button', { name: /update password/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/password must be at least 6 characters/i)).toBeInTheDocument()
+        const errorMessages = screen.getAllByText(/password must be at least 6 characters/i)
+        // Should find at least 2: helper text + error message
+        expect(errorMessages.length).toBeGreaterThanOrEqual(2)
       })
     })
 
@@ -662,9 +664,18 @@ describe('ProfilePage', () => {
       await user.type(screen.getByLabelText(/confirm new password/i), 'newpass123')
       await user.click(screen.getByRole('button', { name: /update password/i }))
 
+      // Wait for success message first
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /change password/i })).toBeInTheDocument()
+        expect(screen.getByText(/password updated successfully/i)).toBeInTheDocument()
       })
+
+      // Then wait for form to close (1 second timeout)
+      await waitFor(
+        () => {
+          expect(screen.getByRole('button', { name: /change password/i })).toBeInTheDocument()
+        },
+        { timeout: 2000 }
+      )
     })
   })
 

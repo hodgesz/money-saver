@@ -119,7 +119,14 @@ export function TransactionEditModal({
                 Edit Transaction
               </h3>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+                {/* Error Message */}
+                {error && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+                    {error}
+                  </div>
+                )}
+
                 {/* Amount */}
                 <div>
                   <Label htmlFor="edit-amount">Amount</Label>
@@ -129,7 +136,6 @@ export function TransactionEditModal({
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    required
                   />
                 </div>
 

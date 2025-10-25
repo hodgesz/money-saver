@@ -148,14 +148,14 @@ export default function ProfilePage() {
         setPasswordError(error.message)
       } else {
         setPasswordSuccess('Password updated successfully')
-        // Clear form but stay in password mode
+        // Clear form and return to profile view
         setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
         setTimeout(() => {
           setPasswordSuccess('')
           setPasswordMode(false)
-        }, 3000)
+        }, 1000) // Reduced to 1 second for better UX
       }
     } catch (err) {
       setPasswordError('An error occurred')
