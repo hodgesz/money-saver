@@ -21,6 +21,7 @@ interface ExtendedTransaction extends ParsedTransaction {
   category?: string
   subcategory?: string
   duplicateCheck?: DuplicateCheckResult
+  is_income?: boolean
 }
 
 export default function TransactionImportPage() {
