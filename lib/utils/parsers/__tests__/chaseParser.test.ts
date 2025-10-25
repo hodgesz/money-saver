@@ -35,6 +35,7 @@ describe('parseChaseCSV', () => {
       const result = parseChaseCSV(csvContent)
 
       expect(result.transactions[0].amount).toBe(2519.13)
+      expect(result.transactions[0].originalAmount).toBe(2519.13)
       expect(result.transactions[0].merchant).toBe('Payment Thank You - Web')
     })
 
@@ -44,7 +45,10 @@ describe('parseChaseCSV', () => {
 
       const result = parseChaseCSV(csvContent)
 
-      expect(result.transactions[0].amount).toBe(-20.96)
+      // amount is always absolute value
+      expect(result.transactions[0].amount).toBe(20.96)
+      // originalAmount preserves the sign for income determination
+      expect(result.transactions[0].originalAmount).toBe(-20.96)
     })
 
     it('uses Transaction Date as the date field', () => {
@@ -63,6 +67,19 @@ describe('parseChaseCSV', () => {
       const result = parseChaseCSV(csvContent)
 
       expect(result.transactions[0].description).toBe('STARBUCKS STORE 05640')
+    })
+
+    it('extracts transaction Type field', () => {
+      const csvContent = `Transaction Date,Post Date,Description,Category,Type,Amount,Memo
+10/24/2025,10/24/2025,UBER   *TRIP,Travel,Sale,-20.96,
+10/24/2025,10/24/2025,Payment Thank You - Web,,Payment,2519.13,
+10/23/2025,10/24/2025,RETURN: AMAZON.COM,Shopping,Return,25.00,`
+
+      const result = parseChaseCSV(csvContent)
+
+      expect(result.transactions[0].type).toBe('Sale')
+      expect(result.transactions[1].type).toBe('Payment')
+      expect(result.transactions[2].type).toBe('Return')
     })
 
     it('handles empty Memo field', () => {

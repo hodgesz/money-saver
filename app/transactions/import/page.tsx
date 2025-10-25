@@ -8,6 +8,7 @@ import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
 import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
 import { parseChaseCSV, ChaseTransaction } from '@/lib/utils/parsers/chaseParser'
+import { getCategoryFromTransaction } from '@/lib/utils/merchantCategoryMatcher'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
 import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/duplicateDetection'
@@ -20,6 +21,7 @@ interface ExtendedTransaction extends ParsedTransaction {
   category?: string
   subcategory?: string
   duplicateCheck?: DuplicateCheckResult
+  is_income?: boolean
 }
 
 export default function TransactionImportPage() {
@@ -100,16 +102,25 @@ export default function TransactionImportPage() {
           errors: amazonResult.errors,
         }
       } else if (format === CSVFormat.CHASE_CREDIT_CARD) {
-        // Use Chase parser
+        // Use Chase parser with intelligent merchant-based categorization
         const chaseResult = parseChaseCSV(content)
+
+        // Filter out payment transactions (credit card payments, not actual expenses)
+        const nonPaymentTransactions = chaseResult.transactions.filter(
+          (t: ChaseTransaction) => t.type !== 'Payment'
+        )
+
         result = {
           success: chaseResult.success,
-          transactions: chaseResult.transactions.map((t: ChaseTransaction) => ({
+          transactions: nonPaymentTransactions.map((t: ChaseTransaction) => ({
             date: t.date,
-            amount: t.amount,
+            amount: t.amount, // Already absolute value from parser
             merchant: t.merchant,
             description: t.description,
-            category: t.chaseCategory, // Map Chase category to our category field
+            category: getCategoryFromTransaction(t.merchant, t.description) || undefined,
+            // Chase format: negative = expense, positive = return/refund
+            // Payments are already filtered out, so positive amounts here are returns/refunds
+            is_income: t.originalAmount > 0,
           })),
           errors: chaseResult.errors,
         }
@@ -256,7 +267,7 @@ export default function TransactionImportPage() {
             merchant: transaction.merchant,
             description: transaction.description,
             category_id: getCategoryId(transaction.category),
-            is_income: false,
+            is_income: transaction.is_income || false,
           })
         )
 

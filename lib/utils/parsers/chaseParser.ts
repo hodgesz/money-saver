@@ -3,9 +3,11 @@
 export interface ChaseTransaction {
   date: string
   amount: number
+  originalAmount: number // Signed amount from CSV (negative = expense, positive = payment/return)
   merchant: string
   description: string
   chaseCategory: string
+  type: string
 }
 
 export interface ChaseParseResult {
@@ -77,6 +79,7 @@ export function parseChaseCSV(csvContent: string): ChaseParseResult {
   const descriptionIndex = headers.indexOf('Description')
   const amountIndex = headers.indexOf('Amount')
   const categoryIndex = headers.indexOf('Category')
+  const typeIndex = headers.indexOf('Type')
 
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
@@ -93,6 +96,7 @@ export function parseChaseCSV(csvContent: string): ChaseParseResult {
         descriptionIndex,
         amountIndex,
         categoryIndex,
+        typeIndex,
         rowNumber
       )
 
@@ -152,6 +156,7 @@ function parseChaseRow(
   descriptionIndex: number,
   amountIndex: number,
   categoryIndex: number,
+  typeIndex: number,
   rowNumber: number
 ): ChaseTransaction | null {
   // Extract values
@@ -159,6 +164,7 @@ function parseChaseRow(
   const description = values[descriptionIndex]?.trim() || ''
   const amountStr = values[amountIndex]?.trim() || ''
   const chaseCategory = values[categoryIndex]?.trim() || ''
+  const type = values[typeIndex]?.trim() || ''
 
   // Validate date
   if (!isValidDate(dateStr)) {
@@ -171,15 +177,23 @@ function parseChaseRow(
     throw new Error(`Invalid amount: ${amountStr}`)
   }
 
+  // Chase format:
+  // - Negative amounts = purchases/expenses (e.g., -20.96)
+  // - Positive amounts = payments/returns (e.g., 2519.13)
+  // Store both original (signed) and absolute amount
+  const absoluteAmount = Math.abs(amount)
+
   // Use description as merchant (Chase doesn't have separate merchant field)
   const merchant = description || 'Unknown'
 
   return {
     date: dateStr,
-    amount,
+    amount: absoluteAmount,
+    originalAmount: amount, // Keep signed amount for is_income determination
     merchant,
     description,
     chaseCategory,
+    type,
   }
 }
 
