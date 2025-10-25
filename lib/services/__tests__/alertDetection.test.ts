@@ -265,7 +265,7 @@ describe('alertDetectionService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      mockSupabaseClient.from.mockReturnValueOnce({
+      mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
@@ -292,44 +292,52 @@ describe('alertDetectionService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      // Mock alert settings
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlert,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      let callCount = 0
 
-      // Mock budget lookup
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockBudget,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        callCount++
 
-      // Mock transactions sum (75% spent)
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              gte: jest.fn().mockReturnValue({
-                lte: jest.fn().mockResolvedValue({
-                  data: [{ total: 375.00 }], // 75% of 500
+        if (callCount === 1) {
+          // First call: alert settings
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlert,
                   error: null,
                 }),
               }),
             }),
-          }),
-        }),
+          }
+        } else if (callCount === 2) {
+          // Second call: budget lookup
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockBudget,
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        } else {
+          // Third call: transactions
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  gte: jest.fn().mockReturnValue({
+                    lte: jest.fn().mockResolvedValue({
+                      data: [{ amount: 375.00 }],
+                      error: null,
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }
+        }
       })
 
       const result = await alertDetectionService.checkBudgetWarningAlert('budget-1')
@@ -367,56 +375,64 @@ describe('alertDetectionService', () => {
         created_at: '2024-01-15T10:00:00Z',
       }
 
-      // Mock alert settings
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlert,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      let callCount = 0
 
-      // Mock budget lookup
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockBudget,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        callCount++
 
-      // Mock transactions sum (85% spent)
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              gte: jest.fn().mockReturnValue({
-                lte: jest.fn().mockResolvedValue({
-                  data: [{ total: 425.00 }], // 85% of 500
+        if (callCount === 1) {
+          // First call: alert settings
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlert,
                   error: null,
                 }),
               }),
             }),
-          }),
-        }),
-      })
-
-      // Mock alert event creation
-      mockSupabaseClient.from.mockReturnValueOnce({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlertEvent,
-              error: null,
+          }
+        } else if (callCount === 2) {
+          // Second call: budget lookup
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockBudget,
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          }
+        } else if (callCount === 3) {
+          // Third call: transactions
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  gte: jest.fn().mockReturnValue({
+                    lte: jest.fn().mockResolvedValue({
+                      data: [{ amount: 425.00 }],
+                      error: null,
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }
+        } else {
+          // Fourth call: create alert event
+          return {
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlertEvent,
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        }
       })
 
       const result = await alertDetectionService.checkBudgetWarningAlert('budget-1')
@@ -455,52 +471,60 @@ describe('alertDetectionService', () => {
         created_at: '2024-01-15T10:00:00Z',
       }
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlert,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      let callCount = 0
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockBudget,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        callCount++
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              gte: jest.fn().mockReturnValue({
-                lte: jest.fn().mockResolvedValue({
-                  data: [{ total: 550.00 }], // 110% of 500
+        if (callCount === 1) {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlert,
                   error: null,
                 }),
               }),
             }),
-          }),
-        }),
-      })
-
-      mockSupabaseClient.from.mockReturnValueOnce({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlertEvent,
-              error: null,
+          }
+        } else if (callCount === 2) {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockBudget,
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          }
+        } else if (callCount === 3) {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  gte: jest.fn().mockReturnValue({
+                    lte: jest.fn().mockResolvedValue({
+                      data: [{ amount: 550.00 }],
+                      error: null,
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }
+        } else {
+          return {
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlertEvent,
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        }
       })
 
       const result = await alertDetectionService.checkBudgetWarningAlert('budget-1')
@@ -778,7 +802,7 @@ describe('alertDetectionService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      mockSupabaseClient.from.mockReturnValue({
+      mockSupabaseClient.from.mockImplementation(() => ({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
@@ -787,7 +811,7 @@ describe('alertDetectionService', () => {
             }),
           }),
         }),
-      })
+      }))
 
       const result = await alertDetectionService.checkAnomalyAlert(mockTransaction)
 
@@ -805,27 +829,46 @@ describe('alertDetectionService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlert,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      let callCount = 0
 
-      // Mock historical data showing normal spending
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              data: Array(20).fill({ amount: 50.00 }),
-              error: null,
+      mockSupabaseClient.from.mockImplementation(() => {
+        callCount++
+
+        if (callCount === 1) {
+          // First call: get alert settings
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlert,
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          }
+        } else {
+          // Second call: get historical transactions
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  gte: jest.fn().mockResolvedValue({
+                    data: Array(20).fill({ amount: 50.00 }),
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        }
       })
 
       const normalTransaction: Transaction = {
@@ -866,37 +909,47 @@ describe('alertDetectionService', () => {
         created_at: '2024-01-15T10:00:00Z',
       }
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlert,
-              error: null,
-            }),
-          }),
-        }),
-      })
+      let callCount = 0
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              data: Array(20).fill({ amount: 50.00 }),
-              error: null,
-            }),
-          }),
-        }),
-      })
+      mockSupabaseClient.from.mockImplementation(() => {
+        callCount++
 
-      mockSupabaseClient.from.mockReturnValueOnce({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockAlertEvent,
-              error: null,
+        if (callCount === 1) {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlert,
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          }
+        } else if (callCount === 2) {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  gte: jest.fn().mockResolvedValue({
+                    data: Array(20).fill({ amount: 50.00 }),
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }
+        } else {
+          return {
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockAlertEvent,
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        }
       })
 
       const result = await alertDetectionService.checkAnomalyAlert(mockTransaction)
