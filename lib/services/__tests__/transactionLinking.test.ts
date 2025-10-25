@@ -23,11 +23,17 @@ import {
 import { createClient } from '@supabase/supabase-js'
 
 // Mock Supabase client
-jest.mock('@/lib/supabase/client', () => ({
-  supabase: {
-    from: jest.fn(),
-  },
-}))
+jest.mock('@/lib/supabase/client', () => {
+  const mockFrom = jest.fn()
+  const mockSupabaseClient = {
+    from: mockFrom,
+  }
+
+  return {
+    createClient: jest.fn(() => mockSupabaseClient),
+    supabase: mockSupabaseClient,
+  }
+})
 
 describe('transactionLinking service', () => {
   const mockParent: LinkedTransaction = {

@@ -9,7 +9,7 @@
  * - Validate link requests
  */
 
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import {
   LinkedTransaction,
   CreateLinkRequest,
@@ -82,6 +82,8 @@ export async function validateLink(
  */
 export async function createLink(request: CreateLinkRequest): Promise<LinkOperationResponse> {
   try {
+    const supabase = createClient()
+
     // Build metadata
     const metadata = {
       ...request.metadata,
@@ -129,6 +131,8 @@ export async function createLink(request: CreateLinkRequest): Promise<LinkOperat
  */
 export async function removeLink(transactionId: string): Promise<LinkOperationResponse> {
   try {
+    const supabase = createClient()
+
     const { data, error } = await supabase
       .from('transactions')
       .update({
@@ -168,6 +172,8 @@ export async function removeLink(transactionId: string): Promise<LinkOperationRe
  */
 export async function updateLink(request: UpdateLinkRequest): Promise<LinkOperationResponse> {
   try {
+    const supabase = createClient()
+
     const updates: Partial<LinkedTransaction> = {}
 
     if (request.confidence !== undefined) {
@@ -216,6 +222,8 @@ export async function updateLink(request: UpdateLinkRequest): Promise<LinkOperat
  * @returns Transaction hierarchy
  */
 export async function getLinkedTransactions(parentId: string): Promise<TransactionHierarchy> {
+  const supabase = createClient()
+
   // Get parent transaction
   const { data: parentData, error: parentError } = await supabase
     .from('transactions')
@@ -262,6 +270,8 @@ export async function getLinkSuggestions(
   userId: string,
   minConfidence: number = 70
 ): Promise<LinkSuggestion[]> {
+  const supabase = createClient()
+
   // Get unlinked parent candidates (e.g., credit card charges with Amazon)
   const { data: parentsData, error: parentsError } = await supabase
     .from('transactions')
@@ -329,4 +339,51 @@ export async function bulkCreateLinks(
   }
 
   return results
+}
+
+/**
+ * Find candidate transactions for linking
+ * Helper function to get unlinked transactions within date range
+ */
+export async function findCandidateTransactions(
+  parentTransaction: LinkedTransaction
+): Promise<LinkedTransaction[]> {
+  const supabase = createClient()
+
+  // Get transactions within ±7 days that are not already linked
+  const startDate = new Date(parentTransaction.date)
+  startDate.setDate(startDate.getDate() - 7)
+  const endDate = new Date(parentTransaction.date)
+  endDate.setDate(endDate.getDate() + 7)
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .is('parent_transaction_id', null)
+    .gte('date', startDate.toISOString())
+    .lte('date', endDate.toISOString())
+    .neq('id', parentTransaction.id)
+    .order('date', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching candidate transactions:', error)
+    return []
+  }
+
+  return data || []
+}
+
+/**
+ * Transaction linking service
+ * Provides a unified interface for all transaction linking operations
+ */
+export const transactionLinkingService = {
+  validateLink,
+  createLink,
+  removeLink,
+  updateLink,
+  getLinkedTransactions,
+  getLinkSuggestions,
+  bulkCreateLinks,
+  findCandidateTransactions,
 }

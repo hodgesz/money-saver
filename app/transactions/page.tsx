@@ -220,9 +220,13 @@ export default function TransactionsPage() {
   }
 
   const handleCreateLinks = async (parentId: string, childIds: string[]) => {
-    const result = await transactionLinkingService.createLink(parentId, childIds, 'manual')
+    const result = await transactionLinkingService.createLink({
+      parentTransactionId: parentId,
+      childTransactionIds: childIds,
+      linkType: 'manual',
+    })
 
-    if (result.error) {
+    if (!result.success) {
       setError('Failed to create links')
       return
     }
@@ -237,7 +241,7 @@ export default function TransactionsPage() {
   const handleUnlinkTransaction = async (id: string) => {
     const result = await transactionLinkingService.removeLink(id)
 
-    if (result.error) {
+    if (!result.success) {
       setError('Failed to unlink transaction')
       return
     }
@@ -247,10 +251,12 @@ export default function TransactionsPage() {
   }
 
   const fetchLinkSuggestions = async () => {
+    if (!user) return
+
     setSuggestionsLoading(true)
 
     try {
-      const suggestions = await transactionLinkingService.getLinkSuggestions()
+      const suggestions = await transactionLinkingService.getLinkSuggestions(user.id)
       setLinkSuggestions(suggestions)
     } catch (err) {
       console.error('Failed to fetch link suggestions:', err)
@@ -261,14 +267,14 @@ export default function TransactionsPage() {
 
   const handleAcceptSuggestion = async (suggestion: LinkSuggestion) => {
     const childIds = suggestion.childTransactions.map(t => t.id)
-    const result = await transactionLinkingService.createLink(
-      suggestion.parentTransaction.id,
-      childIds,
-      'automatic',
-      suggestion.confidence
-    )
+    const result = await transactionLinkingService.createLink({
+      parentTransactionId: suggestion.parentTransaction.id,
+      childTransactionIds: childIds,
+      linkType: 'auto',
+      confidence: suggestion.confidence,
+    })
 
-    if (result.error) {
+    if (!result.success) {
       setError('Failed to accept suggestion')
       return
     }
