@@ -263,41 +263,86 @@ export async function getLinkedTransactions(parentId: string): Promise<Transacti
 /**
  * Get link suggestions for unlinked transactions
  * @param userId - User ID
- * @param minConfidence - Minimum confidence threshold (default: 70)
+ * @param minConfidence - Minimum confidence threshold (default from config: 50)
  * @returns Array of link suggestions
  */
 export async function getLinkSuggestions(
   userId: string,
-  minConfidence: number = 70
+  minConfidence: number = DEFAULT_MATCHING_CONFIG.suggestThreshold
 ): Promise<LinkSuggestion[]> {
+  console.log('[LinkSuggestions] Getting suggestions for userId:', userId, 'minConfidence:', minConfidence)
+
   const supabase = createClient()
 
   // Get unlinked parent candidates (e.g., credit card charges with Amazon)
+  // CRITICAL: Exclude exact "Amazon" in the query to avoid hitting 1000 row limit
+  // CRITICAL: Filter by user_id to prevent cross-user matching
   const { data: parentsData, error: parentsError } = await supabase
     .from('transactions')
     .select('*')
+    .eq('user_id', userId) // Only this user's transactions
     .is('parent_transaction_id', null) // Not a child
     .ilike('merchant', '%amazon%') // Amazon transactions
+    .neq('merchant', 'Amazon') // Exclude line items (exact match)
 
-  if (parentsError || !parentsData) {
+  if (parentsError) {
+    console.log('[LinkSuggestions] Error fetching parents:', parentsError)
     return []
+  }
+
+  if (!parentsData) {
+    console.log('[LinkSuggestions] No parent data returned')
+    return []
+  }
+
+  // Already filtered in database query - all results should be credit card charges
+  const parents = parentsData as LinkedTransaction[]
+
+  console.log('[LinkSuggestions] Found parent candidates (credit card charges):', parents.length)
+  if (parents.length > 0) {
+    console.log('[LinkSuggestions] Sample parent:', {
+      merchant: parents[0].merchant,
+      amount: parents[0].amount,
+      date: parents[0].date,
+    })
   }
 
   // Get unlinked child candidates (e.g., Amazon order line items)
+  // CRITICAL FIX: Filter to ONLY exact "Amazon" merchant (line items)
+  // CRITICAL: Filter by user_id to prevent cross-user matching
   const { data: childrenData, error: childrenError } = await supabase
     .from('transactions')
     .select('*')
+    .eq('user_id', userId) // Only this user's transactions
     .is('parent_transaction_id', null) // Not linked yet
+    .eq('merchant', 'Amazon') // ONLY exact "Amazon" line items
 
-  if (childrenError || !childrenData) {
+  if (childrenError) {
+    console.log('[LinkSuggestions] Error fetching children:', childrenError)
     return []
   }
 
-  const parents = parentsData as LinkedTransaction[]
+  if (!childrenData) {
+    console.log('[LinkSuggestions] No children data returned')
+    return []
+  }
+
+  console.log('[LinkSuggestions] Found child candidates:', childrenData.length)
+  if (childrenData.length > 0) {
+    console.log('[LinkSuggestions] Sample child:', {
+      merchant: childrenData[0].merchant,
+      amount: childrenData[0].amount,
+      date: childrenData[0].date,
+      description: childrenData[0].description?.substring(0, 50),
+    })
+  }
+
   const children = childrenData as LinkedTransaction[]
 
   // Use matching algorithm to find candidates
+  console.log('[LinkSuggestions] Running matching algorithm...')
   const matches = findMatchingTransactions(parents, children, DEFAULT_MATCHING_CONFIG)
+  console.log('[LinkSuggestions] Matching algorithm returned matches:', matches.length)
 
   // Filter by minimum confidence and convert to suggestions
   const suggestions: LinkSuggestion[] = matches
@@ -316,9 +361,17 @@ export async function getLinkSuggestions(
       reasons: [
         `Date proximity: ${match.dateScore}/40 points`,
         `Amount match: ${match.amountScore}/50 points`,
-        `Order grouping: ${match.orderGroupScore}/10 points`,
       ],
     }))
+
+  console.log('[LinkSuggestions] After confidence filter (>=' + minConfidence + '):', suggestions.length)
+  if (suggestions.length > 0) {
+    console.log('[LinkSuggestions] Top suggestion scores:', suggestions.slice(0, 3).map(s => ({
+      confidence: s.confidence,
+      parent: s.parentTransaction.merchant,
+      childCount: s.childTransactions.length,
+    })))
+  }
 
   return suggestions
 }
@@ -371,6 +424,35 @@ export async function findCandidateTransactions(
   }
 
   return data || []
+}
+
+/**
+ * Check if transaction is an Amazon parent (credit card charge)
+ * @param merchant - Merchant name
+ * @returns true if this is a credit card charge (not a line item)
+ */
+function isAmazonParentTransaction(merchant: string): boolean {
+  const lower = merchant.toLowerCase()
+  // Credit card charges have patterns like:
+  // - "Amazon.com*NU7SY9GM0"
+  // - "AMZN Digital*..."
+  // - "Amazon Marketplace"
+  // - "Amazon Grocery Subscri"
+  // But NOT exact "Amazon" (that's a line item)
+  return (
+    (lower.includes('amazon') || lower.includes('amzn')) &&
+    merchant !== 'Amazon' // Exclude exact match - those are line items
+  )
+}
+
+/**
+ * Check if transaction is an Amazon child (line item)
+ * @param merchant - Merchant name
+ * @returns true if this is a line item (not a credit card charge)
+ */
+function isAmazonChildTransaction(merchant: string): boolean {
+  // Line items from Amazon Export parser use exactly "Amazon"
+  return merchant === 'Amazon'
 }
 
 /**
