@@ -12,6 +12,7 @@ interface TransactionListProps {
   categories: Category[]
   onEdit: (transaction: LinkedTransaction) => void
   onDelete: (id: string) => void
+  onLink: (transaction: LinkedTransaction) => void
   onUnlink: (id: string) => void
   isLoading?: boolean
   error?: string
@@ -24,6 +25,7 @@ export function TransactionList({
   categories,
   onEdit,
   onDelete,
+  onLink,
   onUnlink,
   isLoading = false,
   error,
@@ -286,6 +288,7 @@ export function TransactionList({
                 categories={categories}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onLink={onLink}
                 onUnlink={onUnlink}
               />
             ))}

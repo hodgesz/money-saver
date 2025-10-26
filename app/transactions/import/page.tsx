@@ -134,7 +134,7 @@ export default function TransactionImportPage() {
         result = {
           success: amazonExportResult.success,
           transactions: amazonExportResult.transactions.map((t) => ({
-            date: t.date instanceof Date ? t.date.toISOString().split('T')[0] : t.date,
+            date: t.date,
             amount: t.amount,
             merchant: t.merchant,
             description: t.description,

@@ -11,11 +11,11 @@
  * - Shipping and discount handling
  */
 
-import type { Transaction } from '@/types'
+import type { TransactionFormData } from '@/types'
 
 export interface AmazonExportParseResult {
   success: boolean
-  transactions: Transaction[]
+  transactions: TransactionFormData[]
   errors: string[]
   totalOrders: number
   totalAmount: number
@@ -277,9 +277,9 @@ function aggregateOrdersByOrderId(
 }
 
 /**
- * Convert aggregated order to Transaction
+ * Convert aggregated order to TransactionFormData
  */
-function convertOrderToTransaction(order: AggregatedOrder): Transaction {
+function convertOrderToTransaction(order: AggregatedOrder): TransactionFormData {
   // Parse order date
   let orderDate: Date
   try {
@@ -293,7 +293,7 @@ function convertOrderToTransaction(order: AggregatedOrder): Transaction {
   const description = buildOrderDescription(order, itemCount)
 
   return {
-    date: orderDate,
+    date: orderDate.toISOString().split('T')[0],
     amount: Math.round(order.totalOwed * 100) / 100, // Round to 2 decimals
     merchant: 'Amazon',
     description,
@@ -302,10 +302,10 @@ function convertOrderToTransaction(order: AggregatedOrder): Transaction {
 }
 
 /**
- * Convert individual line item to Transaction
+ * Convert individual line item to TransactionFormData
  * Used when aggregateOrders = false to import each item separately for granular categorization
  */
-function convertLineItemToTransaction(line: AmazonOrderLine): Transaction {
+function convertLineItemToTransaction(line: AmazonOrderLine): TransactionFormData {
   // Parse order date
   let orderDate: Date
   try {
@@ -320,7 +320,7 @@ function convertLineItemToTransaction(line: AmazonOrderLine): Transaction {
   }`
 
   return {
-    date: orderDate,
+    date: orderDate.toISOString().split('T')[0],
     amount: Math.round(line.totalOwed * 100) / 100, // Round to 2 decimals
     merchant: 'Amazon',
     description,
