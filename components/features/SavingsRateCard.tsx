@@ -140,13 +140,13 @@ export function SavingsRateCard({ startDate, endDate }: SavingsRateCardProps) {
           {/* Context Message */}
           <div className="pt-2 border-t text-xs text-gray-600">
             {savingsData.savingsRate > 50 && (
-              <p>Excellent savings! You're saving over half your income ✨</p>
+              <p>Excellent savings! You&apos;re saving over half your income ✨</p>
             )}
             {savingsData.savingsRate > 20 && savingsData.savingsRate <= 50 && (
               <p>Good savings rate! Keep up the momentum 💪</p>
             )}
             {savingsData.savingsRate > 0 && savingsData.savingsRate <= 20 && (
-              <p>You're saving, but there's room for improvement 📊</p>
+              <p>You&apos;re saving, but there&apos;s room for improvement 📊</p>
             )}
             {savingsData.savingsRate === 0 && (
               <p>Breaking even - consider reducing expenses or increasing income</p>
