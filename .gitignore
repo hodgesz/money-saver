@@ -70,3 +70,12 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# Test and debug files (added for main branch)
+chase*.png
+test-*.js
+check-*.js
+debug-*.js
+scripts/
+test-data/
+*_TEST_SUMMARY.md
