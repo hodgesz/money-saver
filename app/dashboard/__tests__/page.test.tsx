@@ -32,6 +32,9 @@ jest.mock('@/lib/services/analytics', () => ({
     getCategoryBreakdown: jest.fn(),
     getSpendingTrends: jest.fn(),
     getBudgetSummary: jest.fn(),
+    getYearOverYearComparison: jest.fn(),
+    getMonthOverMonthComparison: jest.fn(),
+    getSavingsRate: jest.fn(),
   },
 }))
 
@@ -88,6 +91,33 @@ describe('DashboardPage', () => {
     })
     ;(transactionService.getTransactionsWithFilters as jest.Mock).mockResolvedValue({
       data: [],
+      error: null,
+    })
+    ;(analyticsService.getYearOverYearComparison as jest.Mock).mockResolvedValue({
+      data: {
+        current: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 1, year: 2024 },
+        previous: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 1, year: 2023 },
+        percentChange: 0,
+        trend: 'stable' as const,
+      },
+      error: null,
+    })
+    ;(analyticsService.getMonthOverMonthComparison as jest.Mock).mockResolvedValue({
+      data: {
+        current: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 1, year: 2024 },
+        previous: { income: 0, expenses: 0, net: 0, transactionCount: 0, month: 12, year: 2023 },
+        percentChange: 0,
+        trend: 'stable' as const,
+      },
+      error: null,
+    })
+    ;(analyticsService.getSavingsRate as jest.Mock).mockResolvedValue({
+      data: {
+        savingsRate: 0,
+        totalIncome: 0,
+        totalExpenses: 0,
+        netSavings: 0,
+      },
       error: null,
     })
   })
@@ -439,7 +469,9 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/0 transaction/i)).toBeInTheDocument()
+        // Verify "0 transactions" appears somewhere in the dashboard
+        const transactionTexts = screen.getAllByText(/0 transaction/i)
+        expect(transactionTexts.length).toBeGreaterThan(0)
       })
     })
   })
