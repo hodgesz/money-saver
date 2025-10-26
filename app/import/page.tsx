@@ -297,7 +297,7 @@ export default function ImportPage() {
               <ol className="list-decimal list-inside mt-2 space-y-1">
                 <li>Log in to Chase.com</li>
                 <li>Go to your credit card account</li>
-                <li>Click "Download transactions" or "Export"</li>
+                <li>Click Download transactions or Export</li>
                 <li>Select CSV format and date range</li>
                 <li>Upload the downloaded file here</li>
               </ol>
@@ -307,7 +307,7 @@ export default function ImportPage() {
               <h4 className="font-semibold text-gray-900">Amazon Orders:</h4>
               <ol className="list-decimal list-inside mt-2 space-y-1">
                 <li>Go to amazon.com/your-orders</li>
-                <li>Click "Download order reports"</li>
+                <li>Click Download order reports</li>
                 <li>Select date range and request report</li>
                 <li>Wait for email notification (may take a few minutes)</li>
                 <li>Download the CSV file and upload it here</li>
