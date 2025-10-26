@@ -72,7 +72,18 @@ export const alertEventsService = {
   async createAlertEvent(input: CreateAlertEventInput): Promise<ServiceResponse<AlertEvent>> {
     const supabase = createClient()
 
+    // Get the current authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        data: null,
+        error: { message: 'User not authenticated', details: authError?.message }
+      }
+    }
+
     const eventData = {
+      user_id: user.id,
       alert_id: input.alert_id ?? null,
       transaction_id: input.transaction_id ?? null,
       budget_id: input.budget_id ?? null,

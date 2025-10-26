@@ -18,6 +18,12 @@ describe('alertEventsService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     ;(createClient as jest.Mock).mockReturnValue(mockSupabaseClient)
+
+    // Mock auth.getUser() to return authenticated user
+    mockSupabaseClient.auth.getUser = jest.fn().mockResolvedValue({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    })
   })
 
   describe('getAlertEvents', () => {
