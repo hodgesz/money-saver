@@ -5,8 +5,8 @@ export interface ValidationResult {
   errors: string[]
 }
 
-// Maximum file size: 10MB (as per PRD requirements)
-export const MAX_FILE_SIZE = 10 * 1024 * 1024
+// Maximum file size: 100MB (increased for full Amazon data exports)
+export const MAX_FILE_SIZE = 100 * 1024 * 1024
 
 // Accepted file types
 export const ACCEPTED_FILE_TYPES = [
