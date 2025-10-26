@@ -35,6 +35,27 @@ export interface BudgetStatus {
   status: 'under' | 'at' | 'over'
 }
 
+export interface YearOverYearComparison {
+  current: MonthlySpending
+  previous: MonthlySpending
+  percentChange: number
+  trend: 'increasing' | 'decreasing' | 'stable' | 'no-data'
+}
+
+export interface MonthOverMonthComparison {
+  current: MonthlySpending
+  previous: MonthlySpending
+  percentChange: number
+  trend: 'increasing' | 'decreasing' | 'stable' | 'no-data'
+}
+
+export interface SavingsRate {
+  savingsRate: number
+  totalIncome: number
+  totalExpenses: number
+  netSavings: number
+}
+
 export const analyticsService = {
   /**
    * Get monthly spending for a specific month
@@ -306,6 +327,184 @@ export const analyticsService = {
       }
 
       return { data: summaries, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Get year-over-year comparison for a specific month
+   */
+  async getYearOverYearComparison(year: number, month: number): Promise<{ data: YearOverYearComparison | null; error: any }> {
+    try {
+      // Get current year data
+      const currentResult = await this.getMonthlySpending(year, month)
+      if (currentResult.error) {
+        return { data: null, error: currentResult.error }
+      }
+
+      // Get previous year data
+      const previousResult = await this.getMonthlySpending(year - 1, month)
+      if (previousResult.error) {
+        return { data: null, error: previousResult.error }
+      }
+
+      const current = currentResult.data!
+      const previous = previousResult.data!
+
+      // Calculate percent change based on expenses
+      let percentChange = 0
+      let trend: 'increasing' | 'decreasing' | 'stable' | 'no-data' = 'stable'
+
+      if (previous.expenses === 0 && current.expenses === 0) {
+        trend = 'stable'
+        percentChange = 0
+      } else if (previous.expenses === 0) {
+        trend = 'no-data'
+        percentChange = 0
+      } else {
+        percentChange = parseFloat((((current.expenses - previous.expenses) / previous.expenses) * 100).toFixed(2))
+
+        if (percentChange > 0) {
+          trend = 'increasing'
+        } else if (percentChange < 0) {
+          trend = 'decreasing'
+        } else {
+          trend = 'stable'
+        }
+      }
+
+      return {
+        data: {
+          current,
+          previous,
+          percentChange,
+          trend,
+        },
+        error: null,
+      }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Get month-over-month comparison
+   */
+  async getMonthOverMonthComparison(year: number, month: number): Promise<{ data: MonthOverMonthComparison | null; error: any }> {
+    try {
+      // Get current month data
+      const currentResult = await this.getMonthlySpending(year, month)
+      if (currentResult.error) {
+        return { data: null, error: currentResult.error }
+      }
+
+      // Calculate previous month and year (handle year boundary)
+      let previousMonth = month - 1
+      let previousYear = year
+
+      if (previousMonth === 0) {
+        previousMonth = 12
+        previousYear = year - 1
+      }
+
+      // Get previous month data
+      const previousResult = await this.getMonthlySpending(previousYear, previousMonth)
+      if (previousResult.error) {
+        return { data: null, error: previousResult.error }
+      }
+
+      const current = currentResult.data!
+      const previous = previousResult.data!
+
+      // Calculate percent change based on expenses
+      let percentChange = 0
+      let trend: 'increasing' | 'decreasing' | 'stable' | 'no-data' = 'stable'
+
+      if (previous.expenses === 0 && current.expenses === 0) {
+        trend = 'stable'
+        percentChange = 0
+      } else if (previous.expenses === 0) {
+        trend = 'no-data'
+        percentChange = 0
+      } else {
+        percentChange = parseFloat((((current.expenses - previous.expenses) / previous.expenses) * 100).toFixed(2))
+
+        if (percentChange > 0) {
+          trend = 'increasing'
+        } else if (percentChange < 0) {
+          trend = 'decreasing'
+        } else {
+          trend = 'stable'
+        }
+      }
+
+      return {
+        data: {
+          current,
+          previous,
+          percentChange,
+          trend,
+        },
+        error: null,
+      }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Calculate savings rate for a date range
+   */
+  async getSavingsRate(startDate: string, endDate: string): Promise<{ data: SavingsRate | null; error: any }> {
+    try {
+      const supabase = createClient()
+
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+
+      if (error) {
+        return { data: null, error }
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return {
+          data: {
+            savingsRate: 0,
+            totalIncome: 0,
+            totalExpenses: 0,
+            netSavings: 0,
+          },
+          error: null,
+        }
+      }
+
+      // Separate income and expenses
+      const incomeTransactions = transactions.filter((tx) => tx.is_income)
+      const expenseTransactions = transactions.filter((tx) => !tx.is_income)
+
+      const totalIncome = incomeTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+      const totalExpenses = expenseTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+      const netSavings = totalIncome - totalExpenses
+
+      // Calculate savings rate
+      let savingsRate = 0
+      if (totalIncome > 0) {
+        savingsRate = parseFloat(((netSavings / totalIncome) * 100).toFixed(2))
+      }
+
+      return {
+        data: {
+          savingsRate,
+          totalIncome,
+          totalExpenses,
+          netSavings,
+        },
+        error: null,
+      }
     } catch (error) {
       return { data: null, error }
     }
