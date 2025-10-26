@@ -16,6 +16,7 @@ import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
 import type { Category } from '@/types'
+import JSZip from 'jszip'
 
 // Extended transaction type to include category info and duplicate status
 interface ExtendedTransaction extends ParsedTransaction {
@@ -69,8 +70,46 @@ export default function TransactionImportPage() {
     }
 
     try {
-      // Read file content
-      const content = await file.text()
+      let content: string
+
+      // Check if file is a ZIP file
+      if (file.name.toLowerCase().endsWith('.zip')) {
+        // Extract CSV from ZIP
+        try {
+          const zip = await JSZip.loadAsync(file)
+
+          // Look for Retail.OrderHistory.1.csv (Amazon export)
+          let csvFile = zip.file('Retail.OrderHistory.1/Retail.OrderHistory.1.csv')
+
+          if (!csvFile) {
+            // Fallback: look for any CSV file in the root
+            const csvFiles = Object.keys(zip.files).filter(name =>
+              name.toLowerCase().endsWith('.csv') && !name.includes('__MACOSX')
+            )
+
+            if (csvFiles.length === 0) {
+              setParseErrors(['No CSV files found in ZIP archive'])
+              return
+            }
+
+            // Use the first CSV file found
+            csvFile = zip.file(csvFiles[0])
+          }
+
+          if (!csvFile) {
+            setParseErrors(['Could not read CSV file from ZIP'])
+            return
+          }
+
+          content = await csvFile.async('text')
+        } catch (zipError) {
+          setParseErrors(['Failed to extract ZIP file: ' + (zipError as Error).message])
+          return
+        }
+      } else {
+        // Read file content normally for CSV/Excel files
+        content = await file.text()
+      }
 
       // Detect CSV format from headers
       const lines = content.trim().split('\n')
@@ -93,7 +132,7 @@ export default function TransactionImportPage() {
         result = {
           success: amazonExportResult.success,
           transactions: amazonExportResult.transactions.map((t) => ({
-            date: t.date,
+            date: t.date instanceof Date ? t.date.toISOString().split('T')[0] : t.date,
             amount: t.amount,
             merchant: t.merchant,
             description: t.description,

@@ -13,10 +13,12 @@ export const ACCEPTED_FILE_TYPES = [
   'text/csv',
   'application/vnd.ms-excel', // .xls
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/zip', // .zip
+  'application/x-zip-compressed', // .zip (alternate MIME type)
 ]
 
 // Accepted file extensions (fallback when MIME type is generic)
-const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx']
+const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx', '.zip']
 
 /**
  * Validates a file for upload
@@ -42,7 +44,7 @@ export function validateFile(file: File): ValidationResult {
   // Validate file type
   const isValidType = validateFileType(file)
   if (!isValidType) {
-    errors.push('File type not supported. Please upload a CSV or Excel file.')
+    errors.push('File type not supported. Please upload a CSV, Excel, or ZIP file.')
   }
 
   // Validate file size
