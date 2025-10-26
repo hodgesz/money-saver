@@ -451,24 +451,34 @@ describe('transactionLinking service', () => {
     it('returns suggestions with high confidence', async () => {
       const { supabase } = require('@/lib/supabase/client')
 
-      // Mock unlinked parent transactions
+      // Mock parent transactions with full query chain
+      // Query: .select('*').eq('user_id').is('parent_transaction_id').ilike('merchant').neq('merchant')
       supabase.from.mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
-          is: jest.fn().mockReturnValue({
-            ilike: jest.fn().mockResolvedValue({
-              data: [mockParent],
-              error: null,
+          eq: jest.fn().mockReturnValue({
+            is: jest.fn().mockReturnValue({
+              ilike: jest.fn().mockReturnValue({
+                neq: jest.fn().mockResolvedValue({
+                  data: [mockParent],
+                  error: null,
+                }),
+              }),
             }),
           }),
         }),
       })
 
-      // Mock unlinked child transactions
+      // Mock child transactions with full query chain
+      // Query: .select('*').eq('user_id').is('parent_transaction_id').eq('merchant')
       supabase.from.mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
-          is: jest.fn().mockResolvedValue({
-            data: mockChildren,
-            error: null,
+          eq: jest.fn().mockReturnValue({
+            is: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({
+                data: mockChildren,
+                error: null,
+              }),
+            }),
           }),
         }),
       })
@@ -481,22 +491,32 @@ describe('transactionLinking service', () => {
     it('filters by minimum confidence threshold', async () => {
       const { supabase } = require('@/lib/supabase/client')
 
+      // Mock parent transactions with full query chain
       supabase.from.mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
-          is: jest.fn().mockReturnValue({
-            ilike: jest.fn().mockResolvedValue({
-              data: [mockParent],
-              error: null,
+          eq: jest.fn().mockReturnValue({
+            is: jest.fn().mockReturnValue({
+              ilike: jest.fn().mockReturnValue({
+                neq: jest.fn().mockResolvedValue({
+                  data: [mockParent],
+                  error: null,
+                }),
+              }),
             }),
           }),
         }),
       })
 
+      // Mock child transactions with full query chain
       supabase.from.mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
-          is: jest.fn().mockResolvedValue({
-            data: mockChildren,
-            error: null,
+          eq: jest.fn().mockReturnValue({
+            is: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({
+                data: mockChildren,
+                error: null,
+              }),
+            }),
           }),
         }),
       })

@@ -352,10 +352,10 @@ describe('automaticLinking service', () => {
       expect(result.suggestedCount).toBe(1)
     })
 
-    it('suggests at 89 confidence (just below auto-link threshold)', async () => {
+    it('suggests at 79 confidence (just below auto-link threshold of 80)', async () => {
       const almostHighSuggestion = {
         ...mockMediumConfidenceSuggestion,
-        confidence: 89,
+        confidence: 79,
       }
 
       ;(getLinkSuggestions as jest.Mock).mockResolvedValue([

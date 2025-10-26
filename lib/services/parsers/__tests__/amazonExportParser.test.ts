@@ -30,23 +30,21 @@ describe('parseAmazonExport', () => {
       const result = parseAmazonExport(csv)
       const transaction = result.transactions[0]
 
-      expect(transaction.date).toBeInstanceOf(Date)
+      expect(typeof transaction.date).toBe('string')
       expect(transaction.amount).toBe(14.93) // Tax-inclusive total
       expect(transaction.merchant).toBe('Amazon')
       expect(transaction.description).toContain('B0CRH8JXXV')
       expect(transaction.is_income).toBe(false)
     })
 
-    it('should parse order date to correct Date object', () => {
+    it('should parse order date to correct date string', () => {
       const csv = `"Website","Order ID","Order Date","Purchase Order Number","Currency","Unit Price","Unit Price Tax","Shipping Charge","Total Discounts","Total Owed","Shipment Item Subtotal","Shipment Item Subtotal Tax","ASIN","Product Condition","Quantity","Payment Instrument Type","Order Status","Shipment Status","Ship Date","Shipping Option","Shipping Address","Buyer Name","Group Name"
 "Amazon.com","111-9348994-8388237","2025-10-25T20:27:42Z","Not Applicable","USD","13.99","0.94","0","0","14.93","13.99","0.94","B0CRH8JXXV","New","1","Visa - 0335","Authorized","Paid","2025-10-25T20:32:53Z","next-1dc","Jonathan  Hodges 2834 E NICHOLS CIR","Jonathan Hodges",""`
 
       const result = parseAmazonExport(csv)
       const transaction = result.transactions[0]
 
-      expect(transaction.date.getFullYear()).toBe(2025)
-      expect(transaction.date.getMonth()).toBe(9) // October (0-indexed)
-      expect(transaction.date.getDate()).toBe(25)
+      expect(transaction.date).toBe('2025-10-25')
     })
   })
 
@@ -56,7 +54,7 @@ describe('parseAmazonExport', () => {
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","17.95","1.21","0","0","19.16","17.95","1.21","B0001","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","9.99","0.67","0","0","10.66","9.99","0.67","B0002","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""`
 
-      const result = parseAmazonExport(csv)
+      const result = parseAmazonExport(csv, { aggregateOrders: true })
 
       expect(result.success).toBe(true)
       expect(result.transactions).toHaveLength(1) // Aggregated into one transaction
@@ -68,7 +66,7 @@ describe('parseAmazonExport', () => {
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","17.95","1.21","0","0","19.16","17.95","1.21","B0001","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","9.99","0.67","0","0","10.66","9.99","0.67","B0002","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""`
 
-      const result = parseAmazonExport(csv)
+      const result = parseAmazonExport(csv, { aggregateOrders: true })
       const transaction = result.transactions[0]
 
       expect(transaction.description).toContain('2 items')
@@ -80,7 +78,7 @@ describe('parseAmazonExport', () => {
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","17.95","1.21","0","0","19.16","17.95","1.21","B0001","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""
 "Amazon.com","112-8566685-0797060","2025-10-13T18:34:00Z","Not Applicable","USD","9.99","0.67","0","0","10.66","9.99","0.67","B0002","New","1","Visa - 0335","Closed","Shipped","2025-10-14T10:00:00Z","standard","Address","Name",""`
 
-      const result = parseAmazonExport(csv)
+      const result = parseAmazonExport(csv, { aggregateOrders: true })
       const transaction = result.transactions[0]
 
       expect(transaction.description).toContain('B0001')
@@ -225,7 +223,7 @@ describe('parseAmazonExport', () => {
       const header = '"Website","Order ID","Order Date","Purchase Order Number","Currency","Unit Price","Unit Price Tax","Shipping Charge","Total Discounts","Total Owed","Shipment Item Subtotal","Shipment Item Subtotal Tax","ASIN","Product Condition","Quantity","Payment Instrument Type","Order Status","Shipment Status","Ship Date","Shipping Option","Shipping Address","Buyer Name","Group Name"'
       const csv = header + '\n' + items.join('\n')
 
-      const result = parseAmazonExport(csv)
+      const result = parseAmazonExport(csv, { aggregateOrders: true })
 
       expect(result.success).toBe(true)
       expect(result.transactions).toHaveLength(1)

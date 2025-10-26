@@ -143,23 +143,23 @@ describe('transactionMatching', () => {
     it('returns true when amounts match exactly', () => {
       const parentAmount = 82.97
       const childrenTotal = 82.97
-      const tolerance = 0.005 // 0.5%
+      const tolerance = 3.00 // $3 fixed tolerance
 
       expect(validateAmountMatch(parentAmount, childrenTotal, tolerance)).toBe(true)
     })
 
     it('returns true when amounts within tolerance', () => {
       const parentAmount = 82.97
-      const childrenTotal = 82.50 // ~0.57% difference
-      const tolerance = 0.01 // 1%
+      const childrenTotal = 82.50 // $0.47 difference
+      const tolerance = 3.00 // $3 fixed tolerance
 
       expect(validateAmountMatch(parentAmount, childrenTotal, tolerance)).toBe(true)
     })
 
     it('returns false when amounts outside tolerance', () => {
       const parentAmount = 82.97
-      const childrenTotal = 75.00 // ~9.6% difference
-      const tolerance = 0.005 // 0.5%
+      const childrenTotal = 75.00 // $7.97 difference
+      const tolerance = 3.00 // $3 fixed tolerance
 
       expect(validateAmountMatch(parentAmount, childrenTotal, tolerance)).toBe(false)
     })
@@ -178,8 +178,8 @@ describe('transactionMatching', () => {
       // Shipping: $5.00
       // Total: $62.21 (but CC shows $62.97 due to rounding)
       const parentAmount = 62.97
-      const childrenTotal = 62.21
-      const tolerance = 0.02 // 2% to handle tax/shipping estimation
+      const childrenTotal = 62.21 // $0.76 difference
+      const tolerance = 3.00 // $3 fixed tolerance handles tax/shipping estimation
 
       expect(validateAmountMatch(parentAmount, childrenTotal, tolerance)).toBe(true)
     })
@@ -231,36 +231,43 @@ describe('transactionMatching', () => {
         DEFAULT_MATCHING_CONFIG
       )
 
-      // Date: 2 days apart = ~32/40 points (40 - (2 * 4))
-      // Amount: 52.97 vs 82.97 = won't match without tax/shipping
-      // This test expects amount to be validated separately
-      expect(result.dateScore).toBeGreaterThan(30)
-      expect(result.totalScore).toBeGreaterThan(0)
+      // Date: 2 days apart with 30-day window
+      // Dynamic decay: 40 - (2 * 1.33) = ~37 points
+      // Amount: 52.97 vs 82.97 = $30 difference, outside $3 tolerance = 0 points
+      expect(result.dateScore).toBeGreaterThan(35)
+      expect(result.amountScore).toBe(0) // Outside tolerance
+      expect(result.totalScore).toBe(result.dateScore) // Only date score
     })
 
     it('applies date decay scoring', () => {
       const config = DEFAULT_MATCHING_CONFIG
 
       // Test at different date differences
+      // Parent: 2025-10-20, One day before: 2025-10-19 (1 day diff)
       const oneDayResult = calculateMatchConfidence(
         mockParentTransaction,
         [{ ...mockChildTransactions[0], date: '2025-10-19T00:00:00Z' }],
         config
       )
 
+      // Three days before: 2025-10-17 (3 day diff)
       const threeDayResult = calculateMatchConfidence(
         mockParentTransaction,
         [{ ...mockChildTransactions[0], date: '2025-10-17T00:00:00Z' }],
         config
       )
 
+      // Dynamic decay for 30-day window: ~1.33 points/day
+      // 1 day: ~39 points, 3 days: ~36 points
       expect(oneDayResult.dateScore).toBeGreaterThan(threeDayResult.dateScore)
+      expect(oneDayResult.dateScore).toBeGreaterThan(35)
+      expect(threeDayResult.dateScore).toBeGreaterThan(30)
     })
 
     it('returns 0 confidence when dates outside window', () => {
       const farTransaction = {
         ...mockChildTransactions[0],
-        date: '2025-10-01T00:00:00Z', // 19 days before
+        date: '2025-09-15T00:00:00Z', // 35 days before (outside 30-day window)
       }
 
       const result = calculateMatchConfidence(
@@ -273,15 +280,16 @@ describe('transactionMatching', () => {
       expect(result.confidenceLevel).toBe('UNMATCHED')
     })
 
-    it('gives bonus for order grouping', () => {
-      // Multiple items on same date should get order group bonus
+    it('order grouping score is deprecated (always 0)', () => {
+      // Order group bonus was removed - all Amazon Export items have Order IDs
+      // Max score is now 90 (40 date + 50 amount), not 100
       const result = calculateMatchConfidence(
         mockParentTransaction,
         mockChildTransactions, // 3 items on same date
         DEFAULT_MATCHING_CONFIG
       )
 
-      expect(result.orderGroupScore).toBe(10) // Max 10 points for grouping
+      expect(result.orderGroupScore).toBe(0) // DEPRECATED - always 0
     })
   })
 
@@ -343,7 +351,7 @@ describe('transactionMatching', () => {
       expect(matches).toHaveLength(1)
       expect(matches[0].parentTransaction.id).toBe('parent-1')
       expect(matches[0].childTransactions).toHaveLength(5) // 3 items + tax + shipping
-      expect(matches[0].totalScore).toBeGreaterThanOrEqual(90) // High confidence - exact match
+      expect(matches[0].totalScore).toBeGreaterThanOrEqual(80) // High confidence - exact amount + close date
     })
 
     it('returns empty array when no matches found', () => {
