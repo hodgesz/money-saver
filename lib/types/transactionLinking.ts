@@ -180,7 +180,7 @@ export interface MatchingConfig {
  * Default matching configuration
  */
 export const DEFAULT_MATCHING_CONFIG: MatchingConfig = {
-  dateWindow: 5, // ±5 days
+  dateWindow: 14, // ±14 days (Amazon order date can be ~1-2 weeks before CC charge)
   amountTolerance: 0.005, // 0.5%
   autoLinkThreshold: 90, // 90+ confidence
   suggestThreshold: 70, // 70-89 confidence
