@@ -7,6 +7,8 @@ import { CategoryChart } from '@/components/features/CategoryChart'
 import { TrendsChart } from '@/components/features/TrendsChart'
 import { BudgetStatusGrid } from '@/components/features/BudgetStatusGrid'
 import { RecentTransactionsList } from '@/components/features/RecentTransactionsList'
+import { ComparisonCard } from '@/components/features/ComparisonCard'
+import { SavingsRateCard } from '@/components/features/SavingsRateCard'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo } from 'react'
 
@@ -73,6 +75,24 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CategoryChart year={currentDate.year} month={currentDate.month} />
             <TrendsChart startDate={dateRange.startDate} endDate={dateRange.endDate} />
+          </div>
+
+          {/* Phase 2.3 - Advanced Analytics Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <ComparisonCard
+              type="year-over-year"
+              year={currentDate.year}
+              month={currentDate.month}
+            />
+            <ComparisonCard
+              type="month-over-month"
+              year={currentDate.year}
+              month={currentDate.month}
+            />
+            <SavingsRateCard
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+            />
           </div>
 
           {/* Bottom Row - Recent Transactions */}
