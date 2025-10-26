@@ -13,6 +13,7 @@ import { getCategoryFromTransaction } from '@/lib/utils/merchantCategoryMatcher'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
 import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/duplicateDetection'
+import { autoLinkAmazonTransactions } from '@/lib/services/automaticLinking'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
 import type { Category } from '@/types'
@@ -39,6 +40,7 @@ export default function TransactionImportPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false)
   const [skipDuplicates, setSkipDuplicates] = useState(true)
+  const [autoLinkResult, setAutoLinkResult] = useState<{ autoLinked: number; suggested: number } | null>(null)
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load categories on mount for matching during import
@@ -343,6 +345,13 @@ export default function TransactionImportPage() {
 
       const skippedCount = parsedTransactions.length - transactionsToImport.length
 
+      // Run automatic linking after successful import
+      const linkResult = await autoLinkAmazonTransactions(user.id)
+      setAutoLinkResult({
+        autoLinked: linkResult.autoLinkedCount,
+        suggested: linkResult.suggestedCount,
+      })
+
       if (errors.length > 0) {
         const message = skipDuplicates
           ? `Imported ${imported} of ${totalToImport} transactions. ${skippedCount} duplicates skipped. ${errors.length} failed.`
@@ -576,6 +585,16 @@ export default function TransactionImportPage() {
               <p className="text-sm text-green-700">
                 Redirecting to transactions page...
               </p>
+              {autoLinkResult && autoLinkResult.autoLinked > 0 && (
+                <p className="text-sm text-green-700 mt-1">
+                  ✓ Automatically linked {autoLinkResult.autoLinked} transactions
+                </p>
+              )}
+              {autoLinkResult && autoLinkResult.suggested > 0 && (
+                <p className="text-sm text-blue-700 mt-1">
+                  📋 {autoLinkResult.suggested} potential matches available for review
+                </p>
+              )}
             </div>
           </div>
         </Card>
