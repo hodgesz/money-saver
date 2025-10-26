@@ -108,7 +108,7 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,.xls,.xlsx"
+          accept=".csv,.xls,.xlsx,.zip"
           onChange={handleFileInputChange}
           className="hidden"
           aria-label="Upload transaction file"
@@ -140,8 +140,8 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
 
           {/* Accepted formats */}
           <div className="text-sm text-gray-500">
-            <p>Accepted formats: CSV, Excel (.xls, .xlsx)</p>
-            <p className="mt-1">Maximum file size: 10 MB</p>
+            <p>Accepted formats: CSV, Excel (.xls, .xlsx), ZIP</p>
+            <p className="mt-1">Maximum file size: 100 MB</p>
           </div>
         </div>
       </div>

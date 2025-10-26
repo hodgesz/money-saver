@@ -1,6 +1,7 @@
 // GREEN PHASE: Implement CSV format detector
 
 export enum CSVFormat {
+  AMAZON_EXPORT = 'amazon_export', // Amazon data request export (Retail.OrderHistory.1.csv)
   AMAZON = 'amazon',
   CHASE_CREDIT_CARD = 'chase_credit_card',
   BANK_STATEMENT = 'bank_statement',
@@ -15,6 +16,13 @@ interface FormatSignature {
 }
 
 const FORMAT_SIGNATURES: Record<CSVFormat, FormatSignature> = {
+  [CSVFormat.AMAZON_EXPORT]: {
+    // Amazon data request export (Retail.OrderHistory.1.csv)
+    // Has very specific columns: Order ID, Unit Price, Unit Price Tax, Total Owed
+    requiredColumns: ['order id', 'unit price', 'unit price tax', 'total owed'],
+    optionalColumns: ['asin', 'shipment', 'payment instrument', 'buyer name'],
+    priority: 0, // Highest priority - very specific format
+  },
   [CSVFormat.AMAZON]: {
     // Amazon is identified by having ASIN or "order" keywords
     requiredColumns: ['asin|order'],
@@ -145,6 +153,8 @@ export function detectCSVFormat(headers: string[]): CSVFormat {
  */
 export function getFormatName(format: CSVFormat): string {
   switch (format) {
+    case CSVFormat.AMAZON_EXPORT:
+      return 'Amazon Data Request Export'
     case CSVFormat.AMAZON:
       return 'Amazon Order History'
     case CSVFormat.CHASE_CREDIT_CARD:

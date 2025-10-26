@@ -51,26 +51,27 @@ export function isWithinDateWindow(
  * Validate if children amounts sum to parent amount within tolerance
  * @param parentAmount - Parent transaction amount
  * @param childrenTotal - Sum of children amounts
- * @param tolerance - Tolerance as decimal (e.g., 0.005 = 0.5%)
+ * @param toleranceDollars - Tolerance in dollars (e.g., 3.00 = $3)
  * @returns true if amounts match within tolerance
  */
 export function validateAmountMatch(
   parentAmount: number,
   childrenTotal: number,
-  tolerance: number
+  toleranceDollars: number
 ): boolean {
   // Handle zero amounts
   if (parentAmount === 0 && childrenTotal === 0) return true
   if (parentAmount === 0 || childrenTotal === 0) return false
 
   const difference = Math.abs(parentAmount - childrenTotal)
-  const percentDiff = difference / parentAmount
 
-  return percentDiff <= tolerance
+  return difference <= toleranceDollars
 }
 
 /**
- * Group transactions by date (same date = same order)
+ * Group transactions by Amazon Order ID (not date!)
+ * This ensures all line items from the same order are grouped together,
+ * even if they shipped on different dates.
  * @param transactions - List of transactions
  * @returns Array of transaction groups sorted by date
  */
@@ -80,17 +81,19 @@ export function groupTransactionsByOrder(
   const groups = new Map<string, TransactionGroup>()
 
   for (const transaction of transactions) {
-    const dateKey = transaction.date.split('T')[0] // Use date only (no time)
+    // Use order_id field directly (populated from Amazon export)
+    // If no Order ID, fall back to date-based grouping
+    const groupKey = transaction.order_id || transaction.date.split('T')[0]
 
-    if (!groups.has(dateKey)) {
-      groups.set(dateKey, {
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, {
         date: transaction.date,
         transactions: [],
         totalAmount: 0,
       })
     }
 
-    const group = groups.get(dateKey)!
+    const group = groups.get(groupKey)!
     group.transactions.push(transaction)
     group.totalAmount += transaction.amount
   }
@@ -103,7 +106,9 @@ export function groupTransactionsByOrder(
 
 /**
  * Calculate date score (0-40 points)
- * Score decays by 4 points per day
+ * Score decays dynamically based on window size
+ * For 30-day window: ~1.33 points/day decay (40/30)
+ * For 14-day window: ~2.86 points/day decay (40/14)
  * @param parentDate - Parent transaction date
  * @param childDate - Child transaction date (or earliest in group)
  * @param windowDays - Date window size
@@ -124,8 +129,10 @@ function calculateDateScore(
   const diffMs = Math.abs(parent.getTime() - child.getTime())
   const diffDays = diffMs / (1000 * 60 * 60 * 24)
 
-  // Max 40 points, decay 4 points per day
-  const score = Math.max(0, 40 - diffDays * 4)
+  // Dynamic decay rate: spread 40 points across the entire window
+  // This ensures matches at the edge of the window can still score points
+  const decayRate = 40 / windowDays
+  const score = Math.max(0, 40 - diffDays * decayRate)
 
   return Math.round(score)
 }
@@ -133,48 +140,43 @@ function calculateDateScore(
 /**
  * Calculate amount score (0-50 points)
  * Based on how well children sum to parent amount
+ * Uses fixed dollar tolerance instead of percentage (e.g., $3 handles CO delivery fees)
  * @param parentAmount - Parent amount
  * @param childrenTotal - Sum of children amounts
- * @param tolerance - Amount tolerance
+ * @param toleranceDollars - Amount tolerance in dollars (e.g., 3.00)
  * @returns Amount score (0-50)
  */
 function calculateAmountScore(
   parentAmount: number,
   childrenTotal: number,
-  tolerance: number
+  toleranceDollars: number
 ): number {
   if (parentAmount === 0) return 0
 
   const difference = Math.abs(parentAmount - childrenTotal)
-  const percentDiff = difference / parentAmount
 
   // If outside tolerance, return 0
-  if (percentDiff > tolerance) return 0
+  if (difference > toleranceDollars) return 0
 
-  // Perfect match = 50 points
+  // Perfect match ($0.00 diff) = 50 points
   // Score decreases linearly as difference approaches tolerance
-  const score = 50 * (1 - percentDiff / tolerance)
+  // Example: $0.28 diff with $3 tolerance = 50 * (1 - 0.28/3) = 45 points
+  const score = 50 * (1 - difference / toleranceDollars)
 
   return Math.round(score)
 }
 
 /**
  * Calculate order group score (0-10 points)
- * Bonus for multiple items on same date (same order)
+ * DEPRECATED: This score is no longer used as all Amazon Export line items
+ * have Order IDs, making this bonus meaningless. Kept for backwards compatibility.
  * @param transactions - Transactions in potential match
- * @returns Order group score (0-10)
+ * @returns Always 0 (score removed)
  */
 function calculateOrderGroupScore(transactions: LinkedTransaction[]): number {
-  if (transactions.length === 1) return 0
-
-  // Group by date
-  const groups = groupTransactionsByOrder(transactions)
-
-  // If all on same date = max 10 points
-  if (groups.length === 1) return 10
-
-  // If multiple dates = 5 points (could be split shipment)
-  return 5
+  // REMOVED: Order ID bonus is redundant since ALL Amazon Export items have Order IDs
+  // Matching now relies solely on date proximity (40 pts) + amount match (50 pts) = max 90 pts
+  return 0
 }
 
 /**
@@ -257,10 +259,18 @@ export function findMatchingTransactions(
   children: LinkedTransaction[],
   config: MatchingConfig
 ): MatchCandidate[] {
+  console.log('[Matching] Starting matching with config:', {
+    dateWindow: config.dateWindow,
+    amountTolerance: config.amountTolerance,
+    suggestThreshold: config.suggestThreshold,
+    enableMerchantMatching: config.enableMerchantMatching,
+  })
+
   const matches: MatchCandidate[] = []
 
   // Filter out already linked children
   const unlinkedChildren = children.filter(child => child.parent_transaction_id === null)
+  console.log('[Matching] Unlinked children after filter:', unlinkedChildren.length)
 
   // Filter parents by merchant if enabled
   let filteredParents = parents
@@ -268,36 +278,98 @@ export function findMatchingTransactions(
     filteredParents = parents.filter(parent =>
       matchesMerchant(parent, config.merchantKeywords)
     )
+    console.log('[Matching] Filtered parents by merchant keywords:', filteredParents.length)
+  } else {
+    console.log('[Matching] Merchant matching disabled, using all parents:', filteredParents.length)
   }
 
   // For each parent, find best matching children
   for (const parent of filteredParents) {
     // Skip if parent is already a child
-    if (parent.parent_transaction_id !== null) continue
+    if (parent.parent_transaction_id !== null) {
+      console.log('[Matching] Skipping parent (already a child):', parent.merchant)
+      continue
+    }
+
+    console.log('[Matching] Processing parent:', {
+      merchant: parent.merchant,
+      amount: parent.amount,
+      date: parent.date,
+    })
 
     // Find candidates within date window
     const candidates = unlinkedChildren.filter(child =>
       isWithinDateWindow(parent.date, child.date, config.dateWindow)
     )
 
-    if (candidates.length === 0) continue
+    console.log('[Matching] Candidates within date window:', candidates.length)
+
+    if (candidates.length === 0) {
+      console.log('[Matching] ⚠️  NO MATCH - Parent skipped (no candidates within date window):', {
+        merchant: parent.merchant,
+        amount: parent.amount,
+        date: parent.date,
+      })
+      continue
+    }
 
     // Try to find combinations that match the parent amount
     // For MVP, we'll use a greedy approach: group by date and try each group
     const groups = groupTransactionsByOrder(candidates)
+    console.log('[Matching] Formed groups by date:', groups.length)
 
+    let matchedForThisParent = false
     for (const group of groups) {
       const confidence = calculateMatchConfidence(parent, group.transactions, config)
 
+      console.log('[Matching] Group confidence score:', {
+        parentMerchant: parent.merchant,
+        parentAmount: parent.amount,
+        parentDate: parent.date,
+        groupDate: group.date,
+        groupCount: group.transactions.length,
+        groupTotal: group.totalAmount,
+        amountDiff: Math.abs(parent.amount - group.totalAmount).toFixed(2),
+        dateScore: confidence.dateScore,
+        amountScore: confidence.amountScore,
+        orderGroupScore: confidence.orderGroupScore,
+        totalScore: confidence.totalScore,
+        confidenceLevel: confidence.confidenceLevel,
+      })
+
       // Only include if above minimum threshold
       if (confidence.totalScore >= config.suggestThreshold) {
+        console.log('[Matching] ✓ Match added (above threshold):', confidence.totalScore)
         matches.push(confidence)
+        matchedForThisParent = true
+      } else {
+        console.log('[Matching] ✗ Match rejected (below threshold):', confidence.totalScore, '<', config.suggestThreshold)
       }
+    }
+
+    // Log if parent had candidates but no groups scored high enough
+    if (!matchedForThisParent && groups.length > 0) {
+      console.log('[Matching] ⚠️  NO MATCH - Parent had candidates but all groups scored below threshold:', {
+        merchant: parent.merchant,
+        amount: parent.amount,
+        date: parent.date,
+        candidatesChecked: candidates.length,
+        groupsChecked: groups.length,
+      })
     }
   }
 
   // Sort by confidence (highest first)
   matches.sort((a, b) => b.totalScore - a.totalScore)
+
+  console.log('[Matching] Total matches found:', matches.length)
+  if (matches.length > 0) {
+    console.log('[Matching] Top 3 matches by confidence:', matches.slice(0, 3).map(m => ({
+      parent: m.parentTransaction.merchant,
+      childCount: m.childTransactions.length,
+      totalScore: m.totalScore,
+    })))
+  }
 
   return matches
 }

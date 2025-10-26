@@ -80,8 +80,12 @@ export default function TransactionsPage() {
                        : categoriesResult.error ? 'Failed to load categories'
                        : null
 
-        // Check if there are more transactions (if we got less than PAGE_LIMIT, we're on the last page)
-        const hasMoreTransactions = newTransactions.length === PAGE_LIMIT
+        // Check if there are more transactions based on parent count (not total including children)
+        // If service returns parentCount, use it; otherwise fall back to total length check
+        const parentCount = (transactionsResult as any).parentCount
+        const hasMoreTransactions = parentCount !== undefined
+          ? parentCount === PAGE_LIMIT
+          : newTransactions.length === PAGE_LIMIT
 
         // Single state update batch
         if (!cancelled) {

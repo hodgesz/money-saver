@@ -54,6 +54,7 @@ export interface LinkedTransaction {
   account_id: string | null
   receipt_url: string | null
   is_income: boolean
+  order_id: string | null
   created_at: string
   updated_at: string
 
@@ -164,7 +165,7 @@ export interface MatchCandidate {
 export interface MatchingConfig {
   /** Date window in days (±) */
   dateWindow: number
-  /** Amount tolerance as percentage (0-1) */
+  /** Amount tolerance in dollars (e.g., 3.00 for $3 tolerance) */
   amountTolerance: number
   /** Minimum confidence score to auto-link */
   autoLinkThreshold: number
@@ -180,10 +181,10 @@ export interface MatchingConfig {
  * Default matching configuration
  */
 export const DEFAULT_MATCHING_CONFIG: MatchingConfig = {
-  dateWindow: 5, // ±5 days
-  amountTolerance: 0.005, // 0.5%
-  autoLinkThreshold: 90, // 90+ confidence
-  suggestThreshold: 70, // 70-89 confidence
+  dateWindow: 30, // ±30 days (Amazon orders can have delayed delivery/billing, especially slow shipping)
+  amountTolerance: 3.00, // $3 fixed tolerance (handles CO delivery fee ~$0.28 + other small variations)
+  autoLinkThreshold: 80, // 80+ confidence (auto-link high-quality matches only)
+  suggestThreshold: 70, // 70+ confidence (require strong match - order_id grouping + close date + good amount)
   enableMerchantMatching: true,
   merchantKeywords: ['amazon', 'amzn', 'amazon.com', 'amazon marketplace'],
 }

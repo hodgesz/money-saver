@@ -5,18 +5,20 @@ export interface ValidationResult {
   errors: string[]
 }
 
-// Maximum file size: 10MB (as per PRD requirements)
-export const MAX_FILE_SIZE = 10 * 1024 * 1024
+// Maximum file size: 100MB (increased for full Amazon data exports)
+export const MAX_FILE_SIZE = 100 * 1024 * 1024
 
 // Accepted file types
 export const ACCEPTED_FILE_TYPES = [
   'text/csv',
   'application/vnd.ms-excel', // .xls
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/zip', // .zip
+  'application/x-zip-compressed', // .zip (alternate MIME type)
 ]
 
 // Accepted file extensions (fallback when MIME type is generic)
-const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx']
+const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx', '.zip']
 
 /**
  * Validates a file for upload
@@ -42,13 +44,13 @@ export function validateFile(file: File): ValidationResult {
   // Validate file type
   const isValidType = validateFileType(file)
   if (!isValidType) {
-    errors.push('File type not supported. Please upload a CSV or Excel file.')
+    errors.push('File type not supported. Please upload a CSV, Excel, or ZIP file.')
   }
 
   // Validate file size
   const isValidSize = validateFileSize(file)
   if (!isValidSize) {
-    errors.push('File size exceeds 10MB limit')
+    errors.push('File size exceeds 100MB limit')
   }
 
   return {
