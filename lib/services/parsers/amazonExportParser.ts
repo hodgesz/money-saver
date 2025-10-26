@@ -22,6 +22,11 @@ export interface AmazonExportParseResult {
   skippedOrders: number
 }
 
+export interface AmazonExportOptions {
+  /** If true, aggregate line items into order totals. If false, import each line item separately */
+  aggregateOrders?: boolean
+}
+
 interface AmazonOrderLine {
   orderId: string
   orderDate: string
@@ -49,8 +54,13 @@ interface AggregatedOrder {
 
 /**
  * Parse Amazon export CSV and convert to transactions
+ * @param csvContent - CSV file content
+ * @param options - Parsing options (aggregateOrders: true for order totals, false for individual line items)
  */
-export function parseAmazonExport(csvContent: string): AmazonExportParseResult {
+export function parseAmazonExport(
+  csvContent: string,
+  options: AmazonExportOptions = { aggregateOrders: false }
+): AmazonExportParseResult {
   const result: AmazonExportParseResult = {
     success: false,
     transactions: [],
@@ -96,20 +106,32 @@ export function parseAmazonExport(csvContent: string): AmazonExportParseResult {
       }
     }
 
-    // Aggregate by order ID
-    const orders = aggregateOrdersByOrderId(orderLines)
+    if (options.aggregateOrders) {
+      // Aggregate mode: Combine line items into order totals
+      const orders = aggregateOrdersByOrderId(orderLines)
 
-    // Convert to transactions
-    for (const order of orders) {
-      // Skip cancelled orders and orders with zero total
-      if (order.orderStatus === 'Cancelled' || order.totalOwed === 0) {
-        result.skippedOrders++
-        continue
+      for (const order of orders) {
+        if (order.orderStatus === 'Cancelled' || order.totalOwed === 0) {
+          result.skippedOrders++
+          continue
+        }
+
+        const transaction = convertOrderToTransaction(order)
+        result.transactions.push(transaction)
+        result.totalAmount += transaction.amount
       }
+    } else {
+      // Line-item mode: Import each line item separately for granular categorization
+      for (const line of orderLines) {
+        if (line.orderStatus === 'Cancelled' || line.totalOwed === 0) {
+          result.skippedOrders++
+          continue
+        }
 
-      const transaction = convertOrderToTransaction(order)
-      result.transactions.push(transaction)
-      result.totalAmount += transaction.amount
+        const transaction = convertLineItemToTransaction(line)
+        result.transactions.push(transaction)
+        result.totalAmount += transaction.amount
+      }
     }
 
     result.totalOrders = result.transactions.length
@@ -273,6 +295,33 @@ function convertOrderToTransaction(order: AggregatedOrder): Transaction {
   return {
     date: orderDate,
     amount: Math.round(order.totalOwed * 100) / 100, // Round to 2 decimals
+    merchant: 'Amazon',
+    description,
+    is_income: false,
+  }
+}
+
+/**
+ * Convert individual line item to Transaction
+ * Used when aggregateOrders = false to import each item separately for granular categorization
+ */
+function convertLineItemToTransaction(line: AmazonOrderLine): Transaction {
+  // Parse order date
+  let orderDate: Date
+  try {
+    orderDate = new Date(line.orderDate.replace('Z', '+00:00'))
+  } catch {
+    orderDate = new Date()
+  }
+
+  // Build description with order ID and ASIN
+  const description = `Order: ${line.orderId} | ASIN: ${line.asin}${
+    line.quantity > 1 ? ` | Qty: ${line.quantity}` : ''
+  }`
+
+  return {
+    date: orderDate,
+    amount: Math.round(line.totalOwed * 100) / 100, // Round to 2 decimals
     merchant: 'Amazon',
     description,
     is_income: false,
