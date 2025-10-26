@@ -96,7 +96,6 @@ describe('LinkedTransactionRow', () => {
 
   const mockOnEdit = jest.fn()
   const mockOnDelete = jest.fn()
-  const mockOnLink = jest.fn()
   const mockOnUnlink = jest.fn()
 
   beforeEach(() => {
@@ -113,7 +112,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -135,7 +133,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -155,7 +152,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -179,7 +175,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -201,7 +196,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -227,7 +221,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -246,49 +239,7 @@ describe('LinkedTransactionRow', () => {
     })
   })
 
-  describe('Link Actions', () => {
-    it('shows "Link Items" button for unlinked transactions', () => {
-      render(
-        <table>
-          <tbody>
-            <LinkedTransactionRow
-              transaction={mockUnlinkedTransaction}
-              categories={mockCategories}
-              onEdit={mockOnEdit}
-              onDelete={mockOnDelete}
-              onLink={mockOnLink}
-              onUnlink={mockOnUnlink}
-            />
-          </tbody>
-        </table>
-      )
-
-      const linkButton = screen.getByLabelText('Link items to Unlinked transaction')
-      expect(linkButton).toBeInTheDocument()
-    })
-
-    it('calls onLink when "Link Items" button is clicked', () => {
-      render(
-        <table>
-          <tbody>
-            <LinkedTransactionRow
-              transaction={mockUnlinkedTransaction}
-              categories={mockCategories}
-              onEdit={mockOnEdit}
-              onDelete={mockOnDelete}
-              onLink={mockOnLink}
-              onUnlink={mockOnUnlink}
-            />
-          </tbody>
-        </table>
-      )
-
-      const linkButton = screen.getByLabelText('Link items to Unlinked transaction')
-      fireEvent.click(linkButton)
-
-      expect(mockOnLink).toHaveBeenCalledWith(mockUnlinkedTransaction)
-    })
-
+  describe('Unlink Actions', () => {
     it('shows "Unlink" button for child transactions', () => {
       render(
         <table>
@@ -298,7 +249,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -319,7 +269,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -349,7 +298,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -375,7 +323,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -402,7 +349,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
               isChild
             />
@@ -426,7 +372,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>
@@ -447,7 +392,6 @@ describe('LinkedTransactionRow', () => {
               categories={mockCategories}
               onEdit={mockOnEdit}
               onDelete={mockOnDelete}
-              onLink={mockOnLink}
               onUnlink={mockOnUnlink}
             />
           </tbody>

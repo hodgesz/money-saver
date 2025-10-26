@@ -12,7 +12,6 @@ interface LinkedTransactionRowProps {
   categories: Category[]
   onEdit: (transaction: LinkedTransaction) => void
   onDelete: (id: string) => void
-  onLink: (transaction: LinkedTransaction) => void
   onUnlink: (id: string) => void
   isChild?: boolean
 }
@@ -23,7 +22,6 @@ export function LinkedTransactionRow({
   categories,
   onEdit,
   onDelete,
-  onLink,
   onUnlink,
   isChild = false,
 }: LinkedTransactionRowProps) {
@@ -153,17 +151,6 @@ export function LinkedTransactionRow({
         {/* Actions */}
         <td className="p-4 text-right">
           <div className="flex justify-end gap-2">
-            {!isChild && !hasChildren && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onLink(transaction)}
-                aria-label={`Link items to ${transaction.description}`}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                Link Items
-              </Button>
-            )}
             {isChild && (
               <Button
                 variant="ghost"
@@ -204,7 +191,6 @@ export function LinkedTransactionRow({
           categories={categories}
           onEdit={onEdit}
           onDelete={onDelete}
-          onLink={onLink}
           onUnlink={onUnlink}
           isChild
         />

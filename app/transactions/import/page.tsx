@@ -7,6 +7,7 @@ import { FileUpload } from '@/components/features/FileUpload'
 import { parseCSV, ParsedTransaction } from '@/lib/utils/csvParser'
 import { detectCSVFormat, getFormatName, CSVFormat } from '@/lib/utils/formatDetector'
 import { parseAmazonCSV, AmazonTransaction } from '@/lib/utils/parsers/amazonParser'
+import { parseAmazonExport } from '@/lib/services/parsers/amazonExportParser'
 import { parseChaseCSV, ChaseTransaction } from '@/lib/utils/parsers/chaseParser'
 import { getCategoryFromTransaction } from '@/lib/utils/merchantCategoryMatcher'
 import { transactionService } from '@/lib/services/transactions'
@@ -86,8 +87,22 @@ export default function TransactionImportPage() {
       // Parse CSV based on detected format
       let result: { success: boolean; transactions: any[]; errors: string[] }
 
-      if (format === CSVFormat.AMAZON) {
-        // Use Amazon parser
+      if (format === CSVFormat.AMAZON_EXPORT) {
+        // Use Amazon Export parser (Retail.OrderHistory.1.csv)
+        const amazonExportResult = parseAmazonExport(content)
+        result = {
+          success: amazonExportResult.success,
+          transactions: amazonExportResult.transactions.map((t) => ({
+            date: t.date,
+            amount: t.amount,
+            merchant: t.merchant,
+            description: t.description,
+            is_income: t.is_income || false,
+          })),
+          errors: amazonExportResult.errors,
+        }
+      } else if (format === CSVFormat.AMAZON) {
+        // Use Amazon parser (old manual export format)
         const amazonResult = parseAmazonCSV(content)
         result = {
           success: amazonResult.success,
