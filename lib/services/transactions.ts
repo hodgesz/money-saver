@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import type { Transaction, TransactionFormData } from '@/types'
+import { alertDetectionService } from './alertDetection'
 
 interface TransactionFilters {
   startDate?: string
@@ -86,6 +87,11 @@ export const transactionService = {
 
   /**
    * Create a new transaction
+   *
+   * Automatically triggers alert detection for:
+   * - Large purchases (configurable threshold)
+   * - Anomalies (statistical outliers)
+   * - Budget warnings (if transaction has a category)
    */
   async createTransaction(transactionData: TransactionFormData) {
     const supabase = createClient()
@@ -111,8 +117,30 @@ export const transactionService = {
       .insert([transactionWithUser])
       .select()
 
+    const createdTransaction = data?.[0] || null
+
+    // Trigger alert detection after successful transaction creation
+    if (createdTransaction) {
+      try {
+        // Run alert detection in background (non-blocking)
+        // Failures in alert detection should not prevent transaction creation
+        await Promise.allSettled([
+          alertDetectionService.checkLargePurchaseAlert(createdTransaction),
+          alertDetectionService.checkAnomalyAlert(createdTransaction),
+        ])
+
+        // Check budget warnings only if transaction has a category
+        if (createdTransaction.category_id) {
+          await alertDetectionService.checkBudgetWarningAlert(createdTransaction.category_id)
+        }
+      } catch (alertError) {
+        // Log error but don't fail transaction creation
+        console.error('Alert detection failed:', alertError)
+      }
+    }
+
     // Return the first item or null
-    return { data: data?.[0] || null, error }
+    return { data: createdTransaction, error }
   },
 
   /**

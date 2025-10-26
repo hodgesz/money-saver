@@ -1,10 +1,20 @@
 import { createClient } from '@/lib/supabase/client'
 import { transactionService } from '../transactions'
+import { alertDetectionService } from '../alertDetection'
 import type { Transaction, TransactionFormData } from '@/types'
 
 // Mock Supabase client
 jest.mock('@/lib/supabase/client', () => ({
   createClient: jest.fn(),
+}))
+
+// Mock alert detection service
+jest.mock('../alertDetection', () => ({
+  alertDetectionService: {
+    checkLargePurchaseAlert: jest.fn(),
+    checkAnomalyAlert: jest.fn(),
+    checkBudgetWarningAlert: jest.fn(),
+  },
 }))
 
 describe('Transaction Service', () => {
@@ -37,6 +47,11 @@ describe('Transaction Service', () => {
     }
 
     ;(createClient as jest.Mock).mockReturnValue(mockSupabaseClient)
+
+    // Reset alert detection mocks
+    ;(alertDetectionService.checkLargePurchaseAlert as jest.Mock).mockResolvedValue({ data: null, error: null })
+    ;(alertDetectionService.checkAnomalyAlert as jest.Mock).mockResolvedValue({ data: null, error: null })
+    ;(alertDetectionService.checkBudgetWarningAlert as jest.Mock).mockResolvedValue({ data: null, error: null })
   })
 
   describe('getTransactions', () => {
@@ -302,6 +317,143 @@ describe('Transaction Service', () => {
 
       expect(result.data).toBeNull()
       expect(result.error).toEqual(mockError)
+    })
+
+    it('should trigger alert detection after creating transaction', async () => {
+      const transactionData: TransactionFormData = {
+        date: '2024-01-15',
+        amount: 150.00, // Large purchase
+        merchant: 'Electronics Store',
+        description: 'New laptop',
+        category_id: 'cat-electronics',
+      }
+
+      const mockCreatedTransaction: Transaction = {
+        id: 'new-id',
+        user_id: 'user-123',
+        date: '2024-01-15T00:00:00Z',
+        amount: 150.00,
+        merchant: 'Electronics Store',
+        description: 'New laptop',
+        category_id: 'cat-electronics',
+        account_id: null,
+        receipt_url: null,
+        is_income: false,
+        created_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:00:00Z',
+      }
+
+      mockSupabaseClient.select.mockResolvedValue({
+        data: [mockCreatedTransaction],
+        error: null,
+      })
+
+      await transactionService.createTransaction(transactionData)
+
+      // Verify alert detection was called with the created transaction
+      expect(alertDetectionService.checkLargePurchaseAlert).toHaveBeenCalledWith(mockCreatedTransaction)
+      expect(alertDetectionService.checkAnomalyAlert).toHaveBeenCalledWith(mockCreatedTransaction)
+      expect(alertDetectionService.checkBudgetWarningAlert).toHaveBeenCalledWith('cat-electronics')
+    })
+
+    it('should still create transaction even if alert detection fails', async () => {
+      const transactionData: TransactionFormData = {
+        date: '2024-01-15',
+        amount: 200.00,
+        merchant: 'Store',
+        description: 'Purchase',
+        category_id: 'cat-1',
+      }
+
+      const mockCreatedTransaction: Transaction = {
+        id: 'new-id',
+        user_id: 'user-123',
+        date: '2024-01-15T00:00:00Z',
+        amount: 200.00,
+        merchant: 'Store',
+        description: 'Purchase',
+        category_id: 'cat-1',
+        account_id: null,
+        receipt_url: null,
+        is_income: false,
+        created_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:00:00Z',
+      }
+
+      mockSupabaseClient.select.mockResolvedValue({
+        data: [mockCreatedTransaction],
+        error: null,
+      })
+
+      // Mock alert detection to throw error
+      ;(alertDetectionService.checkLargePurchaseAlert as jest.Mock).mockRejectedValue(
+        new Error('Alert service unavailable')
+      )
+
+      const result = await transactionService.createTransaction(transactionData)
+
+      // Transaction should still be created successfully
+      expect(result.data).toEqual(mockCreatedTransaction)
+      expect(result.error).toBeNull()
+    })
+
+    it('should not trigger alert detection if transaction creation fails', async () => {
+      const transactionData: TransactionFormData = {
+        date: '2024-01-15',
+        amount: 50.00,
+        merchant: 'Store',
+        description: 'Purchase',
+        category_id: 'cat-1',
+      }
+
+      mockSupabaseClient.select.mockResolvedValue({
+        data: null,
+        error: { message: 'Insert failed' },
+      })
+
+      await transactionService.createTransaction(transactionData)
+
+      // Alert detection should not be called if transaction creation failed
+      expect(alertDetectionService.checkLargePurchaseAlert).not.toHaveBeenCalled()
+      expect(alertDetectionService.checkAnomalyAlert).not.toHaveBeenCalled()
+      expect(alertDetectionService.checkBudgetWarningAlert).not.toHaveBeenCalled()
+    })
+
+    it('should not check budget warnings if transaction has no category', async () => {
+      const transactionData: TransactionFormData = {
+        date: '2024-01-15',
+        amount: 50.00,
+        merchant: 'Store',
+        description: 'Purchase',
+        category_id: null,
+      }
+
+      const mockCreatedTransaction: Transaction = {
+        id: 'new-id',
+        user_id: 'user-123',
+        date: '2024-01-15T00:00:00Z',
+        amount: 50.00,
+        merchant: 'Store',
+        description: 'Purchase',
+        category_id: null,
+        account_id: null,
+        receipt_url: null,
+        is_income: false,
+        created_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:00:00Z',
+      }
+
+      mockSupabaseClient.select.mockResolvedValue({
+        data: [mockCreatedTransaction],
+        error: null,
+      })
+
+      await transactionService.createTransaction(transactionData)
+
+      // Should check purchase and anomaly alerts but not budget warnings
+      expect(alertDetectionService.checkLargePurchaseAlert).toHaveBeenCalled()
+      expect(alertDetectionService.checkAnomalyAlert).toHaveBeenCalled()
+      expect(alertDetectionService.checkBudgetWarningAlert).not.toHaveBeenCalled()
     })
   })
 
