@@ -27,7 +27,7 @@ describe('FileUpload', () => {
     it('displays maximum file size', () => {
       render(<FileUpload onFileSelect={mockOnFileSelect} />)
 
-      expect(screen.getByText(/10.*MB/i)).toBeInTheDocument()
+      expect(screen.getByText(/100.*MB/i)).toBeInTheDocument()
     })
 
     it('renders file input element', () => {
@@ -35,7 +35,7 @@ describe('FileUpload', () => {
 
       const fileInput = document.querySelector('input[type="file"]')
       expect(fileInput).toBeInTheDocument()
-      expect(fileInput).toHaveAttribute('accept', '.csv,.xls,.xlsx')
+      expect(fileInput).toHaveAttribute('accept', '.csv,.xls,.xlsx,.zip')
     })
   })
 
@@ -97,8 +97,9 @@ describe('FileUpload', () => {
     it('displays error for file too large', async () => {
       render(<FileUpload onFileSelect={mockOnFileSelect} />)
 
-      const largeContent = 'a'.repeat(11 * 1024 * 1024) // 11MB
-      const file = new File([largeContent], 'large.csv', { type: 'text/csv' })
+      const file = new File(['test'], 'large.csv', { type: 'text/csv' })
+      // Mock file size to be over 100MB limit
+      Object.defineProperty(file, 'size', { value: 101 * 1024 * 1024, writable: false })
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
 
       await waitFor(() => {
@@ -296,8 +297,9 @@ describe('FileUpload', () => {
     it('displays multiple errors for a single file', async () => {
       render(<FileUpload onFileSelect={mockOnFileSelect} />)
 
-      const largeContent = 'a'.repeat(11 * 1024 * 1024) // 11MB
-      const file = new File([largeContent], 'document.pdf', { type: 'application/pdf' })
+      const file = new File(['test'], 'document.pdf', { type: 'application/pdf' })
+      // Mock file size to be over 100MB limit
+      Object.defineProperty(file, 'size', { value: 101 * 1024 * 1024, writable: false })
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
 
       await waitFor(() => {
