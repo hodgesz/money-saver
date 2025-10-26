@@ -50,7 +50,7 @@ export function validateFile(file: File): ValidationResult {
   // Validate file size
   const isValidSize = validateFileSize(file)
   if (!isValidSize) {
-    errors.push('File size exceeds 10MB limit')
+    errors.push('File size exceeds 100MB limit')
   }
 
   return {

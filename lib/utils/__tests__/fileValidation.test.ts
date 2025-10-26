@@ -36,7 +36,7 @@ describe('validateFile', () => {
       const result = validateFile(file)
 
       expect(result.valid).toBe(false)
-      expect(result.errors).toContain('File type not supported. Please upload a CSV or Excel file.')
+      expect(result.errors).toContain('File type not supported. Please upload a CSV, Excel, or ZIP file.')
     })
 
     it('rejects image files', () => {
@@ -77,29 +77,31 @@ describe('validateFile', () => {
     })
 
     it('accepts files exactly at the size limit', () => {
-      const content = 'a'.repeat(MAX_FILE_SIZE)
-      const file = new File([content], 'transactions.csv', { type: 'text/csv' })
+      const file = new File(['test'], 'transactions.csv', { type: 'text/csv' })
+      // Mock size property to be exactly at the limit
+      Object.defineProperty(file, 'size', { value: MAX_FILE_SIZE, writable: false })
       const result = validateFile(file)
 
       expect(result.valid).toBe(true)
     })
 
     it('rejects files over the size limit', () => {
-      const content = 'a'.repeat(MAX_FILE_SIZE + 1)
-      const file = new File([content], 'transactions.csv', { type: 'text/csv' })
+      const file = new File(['test'], 'transactions.csv', { type: 'text/csv' })
+      // Mock size property to simulate a file over the limit
+      Object.defineProperty(file, 'size', { value: MAX_FILE_SIZE + 1, writable: false })
       const result = validateFile(file)
 
       expect(result.valid).toBe(false)
-      expect(result.errors).toContain('File size exceeds 10MB limit')
+      expect(result.errors).toContain('File size exceeds 100MB limit')
     })
 
-    it('rejects very large files', () => {
+    it('accepts large files under 100MB', () => {
       const content = 'a'.repeat(50 * 1024 * 1024) // 50MB
       const file = new File([content], 'transactions.csv', { type: 'text/csv' })
       const result = validateFile(file)
 
-      expect(result.valid).toBe(false)
-      expect(result.errors[0]).toContain('File size exceeds')
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
     })
 
     it('accepts empty files (edge case)', () => {
@@ -142,8 +144,9 @@ describe('validateFile', () => {
 
   describe('multiple validation errors', () => {
     it('returns multiple errors for invalid file', () => {
-      const content = 'a'.repeat(MAX_FILE_SIZE + 1)
-      const file = new File([content], 'document.pdf', { type: 'application/pdf' })
+      const file = new File(['test'], 'document.pdf', { type: 'application/pdf' })
+      // Mock size property to simulate a file over the limit
+      Object.defineProperty(file, 'size', { value: MAX_FILE_SIZE + 1, writable: false })
       const result = validateFile(file)
 
       expect(result.valid).toBe(false)
@@ -153,8 +156,9 @@ describe('validateFile', () => {
     })
 
     it('returns all errors at once for better UX', () => {
-      const content = 'a'.repeat(MAX_FILE_SIZE + 1)
-      const file = new File([content], 'bad-file.exe', { type: 'application/x-msdownload' })
+      const file = new File(['test'], 'bad-file.exe', { type: 'application/x-msdownload' })
+      // Mock size property to simulate a file over the limit
+      Object.defineProperty(file, 'size', { value: MAX_FILE_SIZE + 1, writable: false })
       const result = validateFile(file)
 
       expect(result.valid).toBe(false)
@@ -202,7 +206,7 @@ describe('validateFile', () => {
 
     it('exports MAX_FILE_SIZE', () => {
       expect(typeof MAX_FILE_SIZE).toBe('number')
-      expect(MAX_FILE_SIZE).toBe(10 * 1024 * 1024) // 10MB
+      expect(MAX_FILE_SIZE).toBe(100 * 1024 * 1024) // 100MB
     })
   })
 })
