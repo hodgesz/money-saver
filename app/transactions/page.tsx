@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Navigation } from '@/components/layout/Navigation'
@@ -77,8 +77,12 @@ export default function TransactionsPage() {
                        : categoriesResult.error ? 'Failed to load categories'
                        : null
 
-        // Check if there are more transactions (if we got less than PAGE_LIMIT, we're on the last page)
-        const hasMoreTransactions = newTransactions.length === PAGE_LIMIT
+        // Check if there are more transactions based on parent count (not total including children)
+        // If service returns parentCount, use it; otherwise fall back to total length check
+        const parentCount = (transactionsResult as any).parentCount
+        const hasMoreTransactions = parentCount !== undefined
+          ? parentCount === PAGE_LIMIT
+          : newTransactions.length === PAGE_LIMIT
 
         // Single state update batch
         if (!cancelled) {
@@ -219,7 +223,7 @@ export default function TransactionsPage() {
     await fetchData()
   }
 
-  const fetchLinkSuggestions = async () => {
+  const fetchLinkSuggestions = useCallback(async () => {
     if (!user) return
 
     setSuggestionsLoading(true)
@@ -232,7 +236,7 @@ export default function TransactionsPage() {
     } finally {
       setSuggestionsLoading(false)
     }
-  }
+  }, [user])
 
   const handleAcceptSuggestion = async (suggestion: LinkSuggestion) => {
     const childIds = suggestion.childTransactions.map(t => t.id)
@@ -265,7 +269,7 @@ export default function TransactionsPage() {
     if (user && !authLoading) {
       fetchLinkSuggestions()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, fetchLinkSuggestions])
 
   // Show loading while checking authentication
   if (authLoading || !user) {
