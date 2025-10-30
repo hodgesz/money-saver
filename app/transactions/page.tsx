@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Navigation } from '@/components/layout/Navigation'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
+import { accountsService } from '@/lib/services/accounts'
 import { transactionLinkingService } from '@/lib/services/transactionLinking'
 import { TransactionForm } from '@/components/features/TransactionForm'
 import { TransactionList } from '@/components/features/TransactionList'
@@ -14,7 +15,7 @@ import { TransactionLinkingModal } from '@/components/features/TransactionLinkin
 import { LinkSuggestionsPanel } from '@/components/features/LinkSuggestionsPanel'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import type { Transaction, Category } from '@/types'
+import type { Transaction, Category, Account } from '@/types'
 import type { LinkedTransaction, LinkSuggestion } from '@/lib/types/transactionLinking'
 
 export default function TransactionsPage() {
@@ -24,12 +25,16 @@ export default function TransactionsPage() {
 
   const [transactions, setTransactions] = useState<LinkedTransaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const PAGE_LIMIT = 25
   const [editingTransaction, setEditingTransaction] = useState<LinkedTransaction | null>(null)
+
+  // Filters
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
 
   // Linking state
   const [linkingTransaction, setLinkingTransaction] = useState<LinkedTransaction | null>(null)
@@ -65,10 +70,15 @@ export default function TransactionsPage() {
       }
 
       try {
-        // Fetch transactions and categories in parallel
-        const [transactionsResult, categoriesResult] = await Promise.all([
-          transactionService.getTransactionsWithFilters({ page: currentPage, limit: PAGE_LIMIT }),
+        // Fetch transactions, categories, and accounts in parallel
+        const [transactionsResult, categoriesResult, accountsResult] = await Promise.all([
+          transactionService.getTransactionsWithFilters({
+            page: currentPage,
+            limit: PAGE_LIMIT,
+            accountId: selectedAccountId || undefined,
+          }),
           categoryService.getCategories(),
+          accountsService.getAccounts(),
         ])
 
         if (cancelled) return
@@ -76,8 +86,10 @@ export default function TransactionsPage() {
         // Batch all state updates together
         const newTransactions = transactionsResult.error ? [] : (transactionsResult.data || [])
         const newCategories = categoriesResult.error ? [] : (categoriesResult.data || [])
+        const newAccounts = accountsResult.error ? [] : (accountsResult.data || [])
         const newError = transactionsResult.error ? 'Failed to load transactions'
                        : categoriesResult.error ? 'Failed to load categories'
+                       : accountsResult.error ? 'Failed to load accounts'
                        : null
 
         // Check if there are more transactions based on parent count (not total including children)
@@ -91,6 +103,7 @@ export default function TransactionsPage() {
         if (!cancelled) {
           setTransactions(newTransactions)
           setCategories(newCategories)
+          setAccounts(newAccounts)
           setError(newError)
           setHasMore(hasMoreTransactions)
           setLoading(false)
@@ -110,7 +123,7 @@ export default function TransactionsPage() {
     return () => {
       cancelled = true
     }
-  }, [user, currentPage])
+  }, [user, currentPage, selectedAccountId])
 
   const fetchData = async (page: number = currentPage) => {
     if (!isMountedRef.current) return
@@ -121,10 +134,15 @@ export default function TransactionsPage() {
     }
 
     try {
-      // Fetch transactions and categories in parallel with pagination
-      const [transactionsResult, categoriesResult] = await Promise.all([
-        transactionService.getTransactionsWithFilters({ page, limit: PAGE_LIMIT }),
+      // Fetch transactions, categories, and accounts in parallel with pagination
+      const [transactionsResult, categoriesResult, accountsResult] = await Promise.all([
+        transactionService.getTransactionsWithFilters({
+          page,
+          limit: PAGE_LIMIT,
+          accountId: selectedAccountId || undefined,
+        }),
         categoryService.getCategories(),
+        accountsService.getAccounts(),
       ])
 
       if (!isMountedRef.current) return
@@ -132,8 +150,10 @@ export default function TransactionsPage() {
       // Batch all state updates together
       const newTransactions = transactionsResult.error ? [] : (transactionsResult.data || [])
       const newCategories = categoriesResult.error ? [] : (categoriesResult.data || [])
+      const newAccounts = accountsResult.error ? [] : (accountsResult.data || [])
       const newError = transactionsResult.error ? 'Failed to load transactions'
                      : categoriesResult.error ? 'Failed to load categories'
+                     : accountsResult.error ? 'Failed to load accounts'
                      : null
 
       // Check if there are more transactions
@@ -143,6 +163,7 @@ export default function TransactionsPage() {
       if (isMountedRef.current) {
         setTransactions(newTransactions)
         setCategories(newCategories)
+        setAccounts(newAccounts)
         setError(newError)
         setHasMore(hasMoreTransactions)
         setLoading(false)
@@ -348,9 +369,39 @@ export default function TransactionsPage() {
         {/* Transaction List - Right side on large screens */}
         <div className="lg:col-span-2">
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Your Transactions
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Your Transactions
+              </h2>
+            </div>
+
+            {/* Filters */}
+            <div className="mb-6 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label htmlFor="account-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                    Filter by Account
+                  </label>
+                  <select
+                    id="account-filter"
+                    value={selectedAccountId}
+                    onChange={(e) => {
+                      setSelectedAccountId(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Accounts</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <TransactionList
               transactions={transactions}
               categories={categories}

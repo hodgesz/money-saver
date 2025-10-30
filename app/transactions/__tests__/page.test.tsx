@@ -3,11 +3,13 @@ import userEvent from '@testing-library/user-event'
 import TransactionsPage from '../page'
 import { transactionService } from '@/lib/services/transactions'
 import { categoryService } from '@/lib/services/categories'
+import { accountsService } from '@/lib/services/accounts'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Mock services
 jest.mock('@/lib/services/transactions')
 jest.mock('@/lib/services/categories')
+jest.mock('@/lib/services/accounts')
 jest.mock('@/contexts/AuthContext')
 
 // Mock next/navigation
@@ -62,6 +64,10 @@ describe('TransactionsPage', () => {
     })
     ;(categoryService.getCategories as jest.Mock).mockResolvedValue({
       data: mockCategories,
+      error: null,
+    })
+    ;(accountsService.getAccounts as jest.Mock).mockResolvedValue({
+      data: [],
       error: null,
     })
   })
