@@ -4,27 +4,39 @@
  */
 
 import { accountsService } from '../accounts'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 // Mock Supabase client
 jest.mock('@/lib/supabase/client', () => ({
-  supabase: {
-    from: jest.fn(),
-    auth: {
-      getUser: jest.fn(),
-    },
-  },
+  createClient: jest.fn(),
 }))
 
 describe('Accounts Service', () => {
   const mockUser = { id: 'user-123' }
+  let mockSupabaseClient: any
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(supabase.auth.getUser as jest.Mock).mockResolvedValue({
-      data: { user: mockUser },
-      error: null,
-    })
+
+    // Create mock Supabase client
+    mockSupabaseClient = {
+      from: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: mockUser },
+          error: null,
+        }),
+      },
+    }
+
+    ;(createClient as jest.Mock).mockReturnValue(mockSupabaseClient)
   })
 
   describe('getAccounts', () => {
@@ -50,27 +62,24 @@ describe('Accounts Service', () => {
         },
       ]
 
-      const mockSelect = jest.fn().mockReturnValue({
-        order: jest.fn().mockResolvedValue({
-          data: mockAccounts,
-          error: null,
-        }),
-      })
-
-      ;(supabase.from as jest.Mock).mockReturnValue({
-        select: mockSelect,
+      mockSupabaseClient.order.mockResolvedValue({
+        data: mockAccounts,
+        error: null,
       })
 
       const result = await accountsService.getAccounts()
 
       expect(result.data).toEqual(mockAccounts)
       expect(result.error).toBeNull()
-      expect(supabase.from).toHaveBeenCalledWith('accounts')
-      expect(mockSelect).toHaveBeenCalledWith('*')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('accounts')
+      expect(mockSupabaseClient.select).toHaveBeenCalledWith('*')
+      expect(mockSupabaseClient.order).toHaveBeenCalledWith('created_at', { ascending: true })
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('accounts')
+      expect(mockSupabaseClient.select).toHaveBeenCalledWith('*')
     })
 
     it('should return error when user not authenticated', async () => {
-      ;(supabase.auth.getUser as jest.Mock).mockResolvedValue({
+      ;(mockSupabaseClient.auth.getUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
       })
@@ -84,15 +93,9 @@ describe('Accounts Service', () => {
     it('should handle database errors', async () => {
       const mockError = { message: 'Database error', code: '500' }
 
-      const mockSelect = jest.fn().mockReturnValue({
-        order: jest.fn().mockResolvedValue({
-          data: null,
-          error: mockError,
-        }),
-      })
-
-      ;(supabase.from as jest.Mock).mockReturnValue({
-        select: mockSelect,
+      mockSupabaseClient.order.mockResolvedValue({
+        data: null,
+        error: mockError,
       })
 
       const result = await accountsService.getAccounts()
@@ -125,7 +128,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         select: mockSelect,
       })
 
@@ -150,7 +153,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         select: mockSelect,
       })
 
@@ -186,7 +189,7 @@ describe('Accounts Service', () => {
         select: mockSelect,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         insert: mockInsert,
       })
 
@@ -225,7 +228,7 @@ describe('Accounts Service', () => {
         select: mockSelect,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         insert: mockInsert,
       })
 
@@ -270,7 +273,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         update: mockUpdate,
       })
 
@@ -298,7 +301,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         update: mockUpdate,
       })
 
@@ -320,7 +323,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         delete: mockDelete,
       })
 
@@ -346,7 +349,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         delete: mockDelete,
       })
 
@@ -374,7 +377,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         select: mockSelect,
       })
 
@@ -394,7 +397,7 @@ describe('Accounts Service', () => {
         eq: mockEq,
       })
 
-      ;(supabase.from as jest.Mock).mockReturnValue({
+      ;(mockSupabaseClient.from as jest.Mock).mockReturnValue({
         select: mockSelect,
       })
 
