@@ -35,6 +35,10 @@ jest.mock('@/lib/services/analytics', () => ({
     getYearOverYearComparison: jest.fn(),
     getMonthOverMonthComparison: jest.fn(),
     getSavingsRate: jest.fn(),
+    // Phase 2.3 Charts methods
+    getMonthlySpendingTrends: jest.fn(),
+    getCategoryTrends: jest.fn(),
+    getIncomeExpenseTimeline: jest.fn(),
   },
 }))
 
@@ -118,6 +122,20 @@ describe('DashboardPage', () => {
         totalExpenses: 0,
         netSavings: 0,
       },
+      error: null,
+    })
+
+    // Phase 2.3 Charts mocks
+    ;(analyticsService.getMonthlySpendingTrends as jest.Mock).mockResolvedValue({
+      data: [],
+      error: null,
+    })
+    ;(analyticsService.getCategoryTrends as jest.Mock).mockResolvedValue({
+      data: [],
+      error: null,
+    })
+    ;(analyticsService.getIncomeExpenseTimeline as jest.Mock).mockResolvedValue({
+      data: [],
       error: null,
     })
   })
@@ -245,7 +263,9 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/Spending Trends/)).toBeInTheDocument()
+        // Use getAllByText since we now have multiple "Spending Trends" elements
+        const trendElements = screen.getAllByText(/Spending Trends/)
+        expect(trendElements.length).toBeGreaterThanOrEqual(1)
       })
     })
 
@@ -539,7 +559,9 @@ describe('DashboardPage', () => {
       await waitFor(() => {
         expect(screen.getByText('Monthly Overview')).toBeInTheDocument()
         expect(screen.getByText('Spending by Category')).toBeInTheDocument()
-        expect(screen.getByText(/Spending Trends/)).toBeInTheDocument()
+        // Check for multiple Spending Trends elements (original + new charts)
+        const trendElements = screen.getAllByText(/Spending Trends/)
+        expect(trendElements.length).toBeGreaterThanOrEqual(1)
         expect(screen.getByText('Budget Status')).toBeInTheDocument()
         expect(screen.getByText('Recent Transactions')).toBeInTheDocument()
       })

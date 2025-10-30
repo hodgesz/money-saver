@@ -56,6 +56,38 @@ export interface SavingsRate {
   netSavings: number
 }
 
+// Phase 2.3 - Charts & Visualizations Types
+export interface MonthlySpendingTrend {
+  month: string // YYYY-MM format
+  monthLabel: string // e.g., "Jan 2024"
+  income: number
+  expenses: number
+  net: number
+  transactionCount: number
+}
+
+export interface CategoryTrendData {
+  name: string
+  total: number
+  color?: string
+}
+
+export interface CategoryTrendMonth {
+  month: string // YYYY-MM format
+  monthLabel: string // e.g., "Jan 2024"
+  categories: {
+    [categoryId: string]: CategoryTrendData
+  }
+}
+
+export interface IncomeExpenseTimelineData {
+  month: string // YYYY-MM format
+  monthLabel: string // e.g., "Jan 2024"
+  income: number
+  expenses: number
+  net: number
+}
+
 export const analyticsService = {
   /**
    * Get monthly spending for a specific month
@@ -505,6 +537,255 @@ export const analyticsService = {
         },
         error: null,
       }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Get monthly spending trends with income and expenses for chart visualization
+   * Phase 2.3 - Monthly Spending Trends Bar Chart
+   */
+  async getMonthlySpendingTrends(
+    startDate: string,
+    endDate: string
+  ): Promise<{ data: MonthlySpendingTrend[] | null; error: any }> {
+    try {
+      const supabase = createClient()
+
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+
+      if (error) {
+        return { data: null, error }
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return { data: [], error: null }
+      }
+
+      // Group by month
+      const monthMap = new Map<
+        string,
+        { income: number; expenses: number; count: number }
+      >()
+
+      transactions.forEach((transaction) => {
+        // Extract year-month directly from ISO string to avoid timezone issues
+        const monthKey = transaction.date.substring(0, 7) // 'YYYY-MM-DD' -> 'YYYY-MM'
+
+        if (monthMap.has(monthKey)) {
+          const existing = monthMap.get(monthKey)!
+          if (transaction.is_income) {
+            existing.income += transaction.amount
+          } else {
+            existing.expenses += transaction.amount
+          }
+          existing.count += 1
+        } else {
+          monthMap.set(monthKey, {
+            income: transaction.is_income ? transaction.amount : 0,
+            expenses: transaction.is_income ? 0 : transaction.amount,
+            count: 1,
+          })
+        }
+      })
+
+      // Convert to array with formatted labels
+      const trends: MonthlySpendingTrend[] = Array.from(monthMap.entries()).map(([month, data]) => {
+        // Format month label (2024-01 -> Jan 2024)
+        const [year, monthNum] = month.split('-')
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const monthLabel = `${monthNames[parseInt(monthNum) - 1]} ${year}`
+
+        return {
+          month,
+          monthLabel,
+          income: data.income,
+          expenses: data.expenses,
+          net: data.income - data.expenses,
+          transactionCount: data.count,
+        }
+      })
+
+      // Sort by month chronologically
+      trends.sort((a, b) => a.month.localeCompare(b.month))
+
+      return { data: trends, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Get category spending trends over time
+   * Phase 2.3 - Category Comparison Chart
+   */
+  async getCategoryTrends(
+    startDate: string,
+    endDate: string
+  ): Promise<{ data: CategoryTrendMonth[] | null; error: any }> {
+    try {
+      const supabase = createClient()
+
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          category:categories (
+            id,
+            name,
+            color
+          )
+        `)
+        .eq('is_income', false) // Only expenses for category comparison
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+
+      if (error) {
+        return { data: null, error }
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return { data: [], error: null }
+      }
+
+      // Group by month, then by category
+      const monthMap = new Map<
+        string,
+        Map<string, { name: string; total: number; color?: string }>
+      >()
+
+      transactions.forEach((transaction) => {
+        // Extract year-month
+        const monthKey = transaction.date.substring(0, 7)
+
+        // Get category info
+        const categoryId = transaction.category_id || 'uncategorized'
+        const categoryName = transaction.category?.name || 'Uncategorized'
+        const categoryColor = transaction.category?.color || '#6b7280'
+
+        // Initialize month map if needed
+        if (!monthMap.has(monthKey)) {
+          monthMap.set(monthKey, new Map())
+        }
+
+        const categoryMap = monthMap.get(monthKey)!
+
+        // Aggregate by category
+        if (categoryMap.has(categoryId)) {
+          const existing = categoryMap.get(categoryId)!
+          existing.total += transaction.amount
+        } else {
+          categoryMap.set(categoryId, {
+            name: categoryName,
+            total: transaction.amount,
+            color: categoryColor,
+          })
+        }
+      })
+
+      // Convert to array format
+      const trends: CategoryTrendMonth[] = Array.from(monthMap.entries()).map(([month, categoryMap]) => {
+        // Format month label
+        const [year, monthNum] = month.split('-')
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const monthLabel = `${monthNames[parseInt(monthNum) - 1]} ${year}`
+
+        // Convert category map to object
+        const categories: { [categoryId: string]: CategoryTrendData } = {}
+        categoryMap.forEach((data, categoryId) => {
+          categories[categoryId] = data
+        })
+
+        return {
+          month,
+          monthLabel,
+          categories,
+        }
+      })
+
+      // Sort by month chronologically
+      trends.sort((a, b) => a.month.localeCompare(b.month))
+
+      return { data: trends, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  /**
+   * Get income vs expenses timeline
+   * Phase 2.3 - Income vs Expenses Area Chart
+   */
+  async getIncomeExpenseTimeline(
+    startDate: string,
+    endDate: string
+  ): Promise<{ data: IncomeExpenseTimelineData[] | null; error: any }> {
+    try {
+      const supabase = createClient()
+
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+
+      if (error) {
+        return { data: null, error }
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return { data: [], error: null }
+      }
+
+      // Group by month
+      const monthMap = new Map<string, { income: number; expenses: number }>()
+
+      transactions.forEach((transaction) => {
+        const monthKey = transaction.date.substring(0, 7)
+
+        if (monthMap.has(monthKey)) {
+          const existing = monthMap.get(monthKey)!
+          if (transaction.is_income) {
+            existing.income += transaction.amount
+          } else {
+            existing.expenses += transaction.amount
+          }
+        } else {
+          monthMap.set(monthKey, {
+            income: transaction.is_income ? transaction.amount : 0,
+            expenses: transaction.is_income ? 0 : transaction.amount,
+          })
+        }
+      })
+
+      // Convert to array format
+      const timeline: IncomeExpenseTimelineData[] = Array.from(monthMap.entries()).map(([month, data]) => {
+        // Format month label
+        const [year, monthNum] = month.split('-')
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const monthLabel = `${monthNames[parseInt(monthNum) - 1]} ${year}`
+
+        return {
+          month,
+          monthLabel,
+          income: data.income,
+          expenses: data.expenses,
+          net: data.income - data.expenses,
+        }
+      })
+
+      // Sort by month chronologically
+      timeline.sort((a, b) => a.month.localeCompare(b.month))
+
+      return { data: timeline, error: null }
     } catch (error) {
       return { data: null, error }
     }
