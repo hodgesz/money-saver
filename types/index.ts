@@ -126,3 +126,23 @@ export interface CreateAlertEventInput {
   severity: AlertSeverity
   metadata?: Record<string, any> | null
 }
+
+// Account Types (Phase 2.4)
+
+export type AccountType = 'checking' | 'savings' | 'credit_card' | 'investment' | 'other'
+
+export interface Account {
+  id: string
+  user_id: string
+  name: string
+  type: AccountType
+  balance: number
+  last_synced: string | null
+  created_at: string
+}
+
+export interface CreateAccountInput {
+  name: string
+  type: AccountType
+  balance: number
+}
