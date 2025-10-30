@@ -16,6 +16,7 @@ export function Navigation() {
     { href: '/transactions/import', label: 'Import' },
     { href: '/categories', label: 'Categories' },
     { href: '/budgets', label: 'Budgets' },
+    { href: '/reports', label: 'Reports' },
     { href: '/profile', label: 'Profile' },
   ]
 
