@@ -247,7 +247,7 @@ describe('LinkedTransactionRow', () => {
   })
 
   describe('Link Actions', () => {
-    it('shows "Link Items" button for unlinked transactions', () => {
+    it('shows "Link Items" button for unlinked marketplace transactions', () => {
       render(
         <table>
           <tbody>
@@ -265,6 +265,32 @@ describe('LinkedTransactionRow', () => {
 
       const linkButton = screen.getByLabelText('Link items to Unlinked transaction')
       expect(linkButton).toBeInTheDocument()
+    })
+
+    it('hides "Link Items" button for non-marketplace transactions', () => {
+      const nonMarketplaceTransaction = {
+        ...mockUnlinkedTransaction,
+        merchant: 'Amazon Grocery Subscri',
+        description: 'Grocery subscription',
+      }
+
+      render(
+        <table>
+          <tbody>
+            <LinkedTransactionRow
+              transaction={nonMarketplaceTransaction}
+              categories={mockCategories}
+              onEdit={mockOnEdit}
+              onDelete={mockOnDelete}
+              onLink={mockOnLink}
+              onUnlink={mockOnUnlink}
+            />
+          </tbody>
+        </table>
+      )
+
+      const linkButton = screen.queryByText('Link Items')
+      expect(linkButton).not.toBeInTheDocument()
     })
 
     it('calls onLink when "Link Items" button is clicked', () => {
