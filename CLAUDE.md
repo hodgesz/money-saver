@@ -45,6 +45,54 @@
 - `/scripts` - Utility scripts
 - `/examples` - Example code
 
+## 🌿 GIT FLOW - CRITICAL BRANCHING RULES
+
+**⚠️ MANDATORY: This project follows Git Flow branching strategy**
+
+### Branch Structure
+```
+main (production) ← Only from develop releases or hotfixes
+  ↑
+develop (integration) ← ALL feature PRs go here
+  ↑
+feature/* (your work)
+```
+
+### ✅ CORRECT Workflow
+```bash
+# 1. Branch from develop
+git checkout develop
+git pull origin develop
+git checkout -b feature/my-feature
+
+# 2. Create PR targeting develop (NOT main!)
+gh pr create --base develop --head feature/my-feature
+
+# 3. After PR approval and CI passes
+gh pr merge <PR-NUMBER> --squash --delete-branch
+```
+
+### ❌ NEVER DO THIS
+```bash
+# ❌ WRONG: Never target main directly
+gh pr create --base main
+
+# ❌ WRONG: Never commit directly to protected branches
+git checkout main && git commit
+
+# ❌ WRONG: Never bypass protections
+gh pr merge --admin
+```
+
+### Key Rules
+1. **ALL feature branches** branch from `develop`
+2. **ALL feature PRs** target `develop` (NOT main!)
+3. **Only releases** go from `develop` → `main`
+4. **Never bypass** CI checks or branch protections
+5. **Always wait** for CI to pass before merging
+
+📖 **See [docs/GIT_FLOW_GUIDE.md](docs/GIT_FLOW_GUIDE.md) for complete workflow**
+
 ## Project Overview
 
 This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
