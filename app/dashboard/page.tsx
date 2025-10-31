@@ -9,9 +9,6 @@ import { BudgetStatusGrid } from '@/components/features/BudgetStatusGrid'
 import { RecentTransactionsList } from '@/components/features/RecentTransactionsList'
 import { ComparisonCard } from '@/components/features/ComparisonCard'
 import { SavingsRateCard } from '@/components/features/SavingsRateCard'
-import { MonthlyTrendsChart } from '@/components/features/MonthlyTrendsChart'
-import { CategoryTrendsChart } from '@/components/features/CategoryTrendsChart'
-import { IncomeExpensesChart } from '@/components/features/IncomeExpensesChart'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo } from 'react'
 
@@ -96,29 +93,6 @@ export default function DashboardPage() {
               startDate={dateRange.startDate}
               endDate={dateRange.endDate}
             />
-          </div>
-
-          {/* Phase 2.3 - Charts & Visualizations Row */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Charts & Visualizations</h2>
-
-            {/* Monthly Spending Trends */}
-            <MonthlyTrendsChart
-              startDate={dateRange.startDate}
-              endDate={dateRange.endDate}
-            />
-
-            {/* Category Trends and Income/Expenses Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CategoryTrendsChart
-                startDate={dateRange.startDate}
-                endDate={dateRange.endDate}
-              />
-              <IncomeExpensesChart
-                startDate={dateRange.startDate}
-                endDate={dateRange.endDate}
-              />
-            </div>
           </div>
 
           {/* Bottom Row - Recent Transactions */}

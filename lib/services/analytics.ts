@@ -92,7 +92,7 @@ export const analyticsService = {
   /**
    * Get monthly spending for a specific month
    */
-  async getMonthlySpending(year: number, month: number): Promise<{ data: MonthlySpending | null; error: any }> {
+  async getMonthlySpending(year: number, month: number, accountId?: string): Promise<{ data: MonthlySpending | null; error: any }> {
     try {
       const supabase = createClient()
 
@@ -100,11 +100,18 @@ export const analyticsService = {
       const startDate = new Date(year, month - 1, 1).toISOString()
       const endDate = new Date(year, month, 1).toISOString()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .gte('date', startDate)
         .lt('date', endDate)
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -151,7 +158,7 @@ export const analyticsService = {
   /**
    * Get category breakdown for a specific month
    */
-  async getCategoryBreakdown(year: number, month: number): Promise<{ data: CategoryBreakdown | null; error: any }> {
+  async getCategoryBreakdown(year: number, month: number, accountId?: string): Promise<{ data: CategoryBreakdown | null; error: any }> {
     try {
       const supabase = createClient()
 
@@ -160,7 +167,7 @@ export const analyticsService = {
       const endDate = new Date(year, month, 1).toISOString()
 
       // Fetch transactions with category details
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select(`
           *,
@@ -173,6 +180,13 @@ export const analyticsService = {
         .eq('is_income', false) // Only expenses
         .gte('date', startDate)
         .lt('date', endDate)
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -235,17 +249,24 @@ export const analyticsService = {
   /**
    * Get spending trends over a date range
    */
-  async getSpendingTrends(startDate: string, endDate: string): Promise<{ data: MonthlyTrend[] | null; error: any }> {
+  async getSpendingTrends(startDate: string, endDate: string, accountId?: string): Promise<{ data: MonthlyTrend[] | null; error: any }> {
     try {
       const supabase = createClient()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .eq('is_income', false) // Only expenses
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: true })
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -488,15 +509,22 @@ export const analyticsService = {
   /**
    * Calculate savings rate for a date range
    */
-  async getSavingsRate(startDate: string, endDate: string): Promise<{ data: SavingsRate | null; error: any }> {
+  async getSavingsRate(startDate: string, endDate: string, accountId?: string): Promise<{ data: SavingsRate | null; error: any }> {
     try {
       const supabase = createClient()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .gte('date', startDate)
         .lte('date', endDate)
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -548,17 +576,25 @@ export const analyticsService = {
    */
   async getMonthlySpendingTrends(
     startDate: string,
-    endDate: string
+    endDate: string,
+    accountId?: string
   ): Promise<{ data: MonthlySpendingTrend[] | null; error: any }> {
     try {
       const supabase = createClient()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: true })
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -627,12 +663,13 @@ export const analyticsService = {
    */
   async getCategoryTrends(
     startDate: string,
-    endDate: string
+    endDate: string,
+    accountId?: string
   ): Promise<{ data: CategoryTrendMonth[] | null; error: any }> {
     try {
       const supabase = createClient()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select(`
           *,
@@ -646,6 +683,13 @@ export const analyticsService = {
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: true })
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }
@@ -725,17 +769,25 @@ export const analyticsService = {
    */
   async getIncomeExpenseTimeline(
     startDate: string,
-    endDate: string
+    endDate: string,
+    accountId?: string
   ): Promise<{ data: IncomeExpenseTimelineData[] | null; error: any }> {
     try {
       const supabase = createClient()
 
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: true })
+
+      // Apply account filter if provided
+      if (accountId) {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data: transactions, error } = await query
 
       if (error) {
         return { data: null, error }

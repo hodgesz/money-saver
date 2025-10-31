@@ -6,6 +6,7 @@ interface TransactionFilters {
   startDate?: string
   endDate?: string
   categoryId?: string
+  accountId?: string
   search?: string
   page?: number
   limit?: number
@@ -50,6 +51,11 @@ export const transactionService = {
     // Apply category filter
     if (filters.categoryId) {
       query = query.eq('category_id', filters.categoryId)
+    }
+
+    // Apply account filter
+    if (filters.accountId) {
+      query = query.eq('account_id', filters.accountId)
     }
 
     // Apply search filter (searches in description)

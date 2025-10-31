@@ -44,3 +44,10 @@ if (typeof File !== 'undefined' && !File.prototype.text) {
     })
   }
 }
+
+// Polyfill TextEncoder/TextDecoder for jsPDF
+if (typeof TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util')
+  global.TextEncoder = TextEncoder
+  global.TextDecoder = TextDecoder
+}
