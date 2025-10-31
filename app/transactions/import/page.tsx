@@ -16,6 +16,7 @@ import { duplicateDetectionService, DuplicateCheckResult } from '@/lib/services/
 import { autoLinkAmazonTransactions } from '@/lib/services/automaticLinking'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
+import { Navigation } from '@/components/layout/Navigation'
 import type { Category } from '@/types'
 import JSZip from 'jszip'
 
@@ -380,11 +381,13 @@ export default function TransactionImportPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-2">Import Transactions</h1>
-      <p className="text-gray-600 mb-8">
-        Upload a CSV or Excel file to import your transactions
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-2">Import Transactions</h1>
+        <p className="text-gray-600 mb-8">
+          Upload a CSV or Excel file to import your transactions
+        </p>
 
       {/* File Upload */}
       <Card className="mb-6">
@@ -622,6 +625,7 @@ export default function TransactionImportPage() {
           </div>
         </Card>
       )}
+      </div>
     </div>
   )
 }

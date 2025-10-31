@@ -70,6 +70,12 @@ describe('TransactionImportPage', () => {
 
       expect(screen.getByTestId('upload-area')).toBeInTheDocument()
     })
+
+    it('renders Navigation component', () => {
+      render(<TransactionImportPage />)
+
+      expect(screen.getByRole('navigation')).toBeInTheDocument()
+    })
   })
 
   describe('file upload and parsing', () => {
