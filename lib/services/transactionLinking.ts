@@ -21,6 +21,7 @@ import {
   DEFAULT_MATCHING_CONFIG,
 } from '@/lib/types/transactionLinking'
 import { findMatchingTransactions } from './transactionMatching'
+import { isLinkableAmazonTransaction } from '@/lib/utils/amazonLinkingFilter'
 
 /**
  * Validate a link request before creating
@@ -295,8 +296,10 @@ export async function getLinkSuggestions(
     return []
   }
 
-  // Already filtered in database query - all results should be credit card charges
-  const parents = parentsData as LinkedTransaction[]
+  // Filter to only marketplace transactions (exclude Prime, Grocery Subscriptions, etc.)
+  const parents = (parentsData as LinkedTransaction[]).filter(transaction =>
+    isLinkableAmazonTransaction(transaction.merchant)
+  )
 
   console.log('[LinkSuggestions] Found parent candidates (credit card charges):', parents.length)
   if (parents.length > 0) {

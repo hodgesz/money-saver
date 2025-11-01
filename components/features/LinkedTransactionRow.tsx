@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import type { LinkedTransaction } from '@/lib/types/transactionLinking'
 import type { Category } from '@/types'
 import { getConfidenceLevel } from '@/lib/types/transactionLinking'
+import { isLinkableAmazonTransaction } from '@/lib/utils/amazonLinkingFilter'
 
 interface LinkedTransactionRowProps {
   transaction: LinkedTransaction
@@ -153,7 +154,7 @@ export function LinkedTransactionRow({
         {/* Actions */}
         <td className="p-4 text-right">
           <div className="flex justify-end gap-2">
-            {!isChild && !hasChildren && (
+            {!isChild && !hasChildren && isLinkableAmazonTransaction(transaction.merchant) && (
               <Button
                 variant="ghost"
                 size="sm"

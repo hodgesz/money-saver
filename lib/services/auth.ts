@@ -116,7 +116,14 @@ class AuthService {
    */
   async getSession(): Promise<SessionResult> {
     const supabase = createClient()
+    console.log('[AuthService] Getting session...')
     const { data, error } = await supabase.auth.getSession()
+    console.log('[AuthService] Session result:', {
+      hasSession: !!data?.session,
+      hasError: !!error,
+      errorMessage: error?.message,
+      sessionUser: data?.session?.user?.email
+    })
 
     return { data, error }
   }
